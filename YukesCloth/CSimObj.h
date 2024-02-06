@@ -2,23 +2,13 @@
 #pragma once
 #include <fstream>
 
+class StHead;
 class StTag;
+class StSimMesh;
+#define DEBUG_TOTAL_NODES 18;
+
 class CSimObj
 {
-
-	enum {
-		enTagType_SimMesh = 0x5,
-		enTagType_SimMesh_AssignSubObj = 0x6,
-		enTagType_SimMesh_AssignSubObjVtx = 0x7,
-		enTagType_SimMesh_AssignSimVtx = 0x6,
-		enTagType_SimMesh_RCN = 0x6,
-		enTagType_SimMesh_Skin = 0x6,
-		enTagType_SimMesh_SimLinkSrc = 0x6,
-		enTagType_SimMesh_Pattern = 0x6,
-		enTagType_SimMesh_Stacks = 0x6
-		/* ... */
-		/* todo: complete enums */
-	};
 
 public:
 
@@ -26,17 +16,15 @@ public:
 	void Create();
 
 private:
-
-	void InitTag(uint32_t eTyoe);
+	void InitTag(StTag& tag);
 	void GetAllTags();
-	StTag GetNextTag();
+	StTag GetTag(StTag* pParentTag = nullptr);
 
 private:
-	void GetSimMesh();
-	void AssignSubObj();
-	void AssignSubObjVtx();
 
+	StHead* m_pStHead = nullptr;
 	std::ifstream* m_pDataStream;
 	uintptr_t m_iStreamPos = std::ios::beg;
-};
 
+	friend class CSimMeshData;
+};

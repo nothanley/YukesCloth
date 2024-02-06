@@ -23,6 +23,12 @@
     <ClCompile Include="CSimObj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CClothStructs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CSimMeshData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClothContainer.h">
@@ -32,6 +38,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CSimObj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CClothStructs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CSimMeshData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

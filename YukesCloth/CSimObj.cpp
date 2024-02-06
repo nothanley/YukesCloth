@@ -1,43 +1,13 @@
 #include <vector>
 #include "CSimObj.h"
 #include <BinaryIO.h>
-
+#include "CClothStructs.h"
+#include "CSimMeshData.h"
 using namespace BinaryIO;
-#define _U32  ReadUInt32(*m_pDataStream)
-#define _U16  ReadUInt16(*m_pDataStream)
-#define _BOOL ReadBool(*m_pDataStream)
 
 #ifdef DEBUG_CONSOLE
 #include <iostream> 
 #endif 
-
-struct StHead {
-	uint32_t eType;
-	uint32_t sTagCount;
-	uint32_t sTotalSize;
-	uint32_t sSize;
-};
-
-struct StTag {
-	uint32_t eType;
-	uint32_t sSize;
-	uint32_t sTotalSize;
-};
-
-struct StSimMesh {
-	uint32_t numTags;
-	uint32_t sName; /* Index of name @ string table */
-	uint32_t sSimVtxCount;
-	uint32_t sIterationCount;
-	bool bCalcNormal;
-	bool bDispObject;
-};
-
-struct StSimMesh_AssignSubObj /* rename this?? */ {
-	uint32_t numTags;
-	uint32_t sModelName;
-	uint32_t sObjName;
-};
 
 CSimObj::CSimObj(std::ifstream* fs) {
 	this->m_pDataStream = fs;
@@ -46,93 +16,143 @@ CSimObj::CSimObj(std::ifstream* fs) {
 void
 CSimObj::Create() {
 	/* Initialize Struct Header Data */
-	StHead stClothHead{ _U32,_U32,_U32,_U32 };
+	m_pStHead = new StHead{ _U32,_U32,_U32,_U32 };
 
 #ifdef DEBUG_CONSOLE
 	printf("\n====== StHead {sTagCount:%d, eType:%d, sSize:%d, sTotalSize:%d} ======\n",
-			stClothHead.sTagCount, stClothHead.eType, stClothHead.sSize, stClothHead.sTotalSize);
+			m_pStHead->sTagCount, m_pStHead->eType, m_pStHead->sSize, m_pStHead->sTotalSize);
 #endif
 
 	/* Update stream pointer */
-	m_iStreamPos += stClothHead.sSize;
+	m_iStreamPos += m_pStHead->sSize;
 	GetAllTags();
 };
 
 void
-CSimObj::AssignSubObjVtx() {
-	printf("\n\t\t* SimMesh_AssignSubObjVtx - TODO: do something with this data! \n");
-}
+CSimObj::GetAllTags() {
 
-void 
-CSimObj::AssignSubObj() {
-	StSimMesh_AssignSubObj _SubObj{ _U32, _U32, _U32, };
+	std::vector<StTag> yclNodes;
+	uint32_t numNodes = DEBUG_TOTAL_NODES; /* Placeholder number for debugging */
 
-	#ifdef DEBUG_CONSOLE
-	printf("\n\t\t- StSimMesh_AssignSubObj {sTags: %d, sModelName:%d, sObjName:%d }\n",
-		_SubObj.numTags, _SubObj.sModelName, _SubObj.sObjName);
-	#endif
-}
+	/* Get first tag */
+	StTag parent = GetTag();
+	yclNodes.push_back(parent);
 
-void
-CSimObj::GetSimMesh() {
-
-	/* Initialize and get Sim Mesh stream */
-	StSimMesh _SimMesh{ _U32, _U32, _U32, _U32, _U32, _U32 };
-
-#ifdef DEBUG_CONSOLE
-	printf("\n\t\t- StSimMesh {sTags: %d, sName:%d, sSimVtxCount:%d, sIterationCount:%d, bCalcNormal: %s, bDispObject: %s}\n",
-		_SimMesh.numTags, _SimMesh.sName, _SimMesh.sSimVtxCount,
-		_SimMesh.sIterationCount, _SimMesh.bCalcNormal ? "true" : "false",
-		_SimMesh.bDispObject ? "true" : "false");
-#endif
-
-}
-
-void 
-CSimObj::InitTag( uint32_t eType ) {
-	switch (eType) {
-		case enTagType_SimMesh:
-			GetSimMesh();
-			break;
-		case enTagType_SimMesh_AssignSubObj:
-			AssignSubObj();
-			break;
-		case enTagType_SimMesh_AssignSubObjVtx:
-			AssignSubObjVtx();
-			break;
-		default:
-			break;
+	/* Iterate and collect all child nodes */
+	for (int i = 0; i < numNodes; i++) {
+		StTag node = GetTag(&parent);
+		yclNodes.push_back(node);
 	}
+
 }
 
 StTag
-CSimObj::GetNextTag() {
+CSimObj::GetTag(StTag* pParentTag) {
 	/* Seek to data begin address*/
 	m_pDataStream->seekg(m_iStreamPos);
 
 	/* Init Struct Tag data */
 	StTag stDataTag{ _U32,_U32,_U32 };
+	stDataTag.pParent = pParentTag;
 
 #ifdef DEBUG_CONSOLE
-	printf("\n\t- StTag {eType:%d, sSize:%d, sTotalSize:%d}\n",
-		stDataTag.eType, stDataTag.sSize, stDataTag.sTotalSize);
+	printf("\n[0x%x]\t- StTag {eType:%d, sSize:%d, sTotalSize:%d}\n",
+		m_iStreamPos, stDataTag.eType, stDataTag.sSize, stDataTag.sTotalSize);
 #endif
 
-	InitTag(stDataTag.eType);
-	m_iStreamPos += stDataTag.sSize;
-
+	InitTag(stDataTag);
 	return stDataTag;
 }
 
-void 
-CSimObj::GetAllTags() {
-	
-	std::vector<StTag> yclNodes;
-	uint32_t numNodes = 3; /* Placeholder number for debugging */
 
-	for (int i = 0; i < numNodes; i++) {
-		StTag node = GetNextTag();
-		yclNodes.push_back(node);
+void
+CSimObj::InitTag(StTag& tag) {
+
+	switch (tag.eType) {
+
+		case enTagType_SimMesh:
+			CSimMeshData::GetSimMesh(tag,this);
+			m_iStreamPos += tag.sSize;
+			break;
+		case enTagType_SimMesh_AssignSubObj:
+			CSimMeshData::AssignSubObj(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sSize;
+			break;
+		case enTagType_SimMesh_AssignSubObjVtx:
+			CSimMeshData::AssignSubObjVtx(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_AssignSimVtx:
+			CSimMeshData::AssignSimVtx(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_RCN:
+			CSimMeshData::GetRecalcNormalData(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_Skin:
+			CSimMeshData::GetSkinData(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_SimLinkSrc:
+			CSimMeshData::LinkSourceMesh(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_Pattern:
+			CSimMeshData::GetSimMeshPattern(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sSize;
+			break;
+		case enTagType_SimMesh_Stacks:
+			CSimMeshData::GetSimMeshStacks(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sSize;
+			break;
+		case enTagType_SimMesh_SkinCalc:
+			CSimMeshData::GetSkinCalc(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_SkinPaste:
+			CSimMeshData::GetSkinPaste(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_OldVtxSave:
+			CSimMeshData::SaveOldVtxs(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_Force:
+			CSimMeshData::GetForce(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_CtStretchLink:
+			CSimMeshData::GetConstraintStretchLink(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_CtStdLink:
+			CSimMeshData::GetConstraintStandardLink(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_CtBendLink:
+			CSimMeshData::GetConstraintBendLink(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_BendingStiffness:
+			CSimMeshData::GetBendStiffness(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_ColVtx:
+			CSimMeshData::GetCollisionVerts(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimMesh_CtFixation:
+			CSimMeshData::GetConstraintFixation(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		case enTagType_SimLine:
+			CSimMeshData::GetSimLines(tag.pParent->stSimMesh,this);
+			m_iStreamPos += tag.sTotalSize;
+			break;
+		default:
+			printf("No Suitable Operator Found.\n");
+			break;
+
 	}
-
 }

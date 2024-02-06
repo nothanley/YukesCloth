@@ -3,6 +3,12 @@
 #pragma comment(lib, "Ws2_32.lib")
 using namespace std;
 
+#define _U32  ReadUInt32(*m_pDataStream)
+#define _S32  ReadSInt32(*m_pDataStream)
+#define _U16  ReadUShort(*m_pDataStream)
+#define _BOOL ReadBool(*m_pDataStream)
+#define _FLOAT ReadFloat(*m_pDataStream)
+
 namespace BinaryIO {
 
 	std::string ReadString(istream& fs, int size);
