@@ -77,7 +77,7 @@ CSimMeshData::GetRecalcNormalData(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	if (!&sMesh) {
+    if (!&sMesh || sMesh.isSimLine) {
 		printf("Could not parse skin data - Missing sim mesh destination.\n");
 		return;
 	}
@@ -111,7 +111,7 @@ CSimMeshData::LinkSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSimMeshPattern(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	if (!&sMesh) {
+    if (!&sMesh || sMesh.isSimLine) {
 		printf("Could not parse skin pattern - Missing sim mesh destination.\n");
 		return;
 	}
@@ -288,11 +288,20 @@ CSimMeshData::GetConstraintFixation(StSimMesh& sMesh, const CSimObj* pSimObj) {
 }
 
 void
-CSimMeshData::GetSimLines(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	uint32_t unkVal0 = _U32;
-	uint32_t unkVal1 = _U32;
-	uint32_t unkVal2 = _U32;
-	uint32_t unkVal3 = _U32;
+CSimMeshData::GetSimLine(StTag& pTag, const CSimObj* pSimObj) {
+    StSimMesh* pSimLine = new StSimMesh;
+    pSimLine->numTags = _U32;
+    pSimLine->sName = _U32;
+    pSimLine->sSimVtxCount = _U32;
+    pSimLine->sIterationCount = _U32;
+    pSimLine->isSimLine = true;
+    pTag.pSimMesh = pSimLine;
+
+#ifdef DEBUG_CONSOLE
+    printf("\n\t\t- StSimLine {sTags: %d, sName:%d, sSimVtxCount:%d, sIterationCount:%d}\n",
+           pSimLine->numTags, pSimLine->sName,
+           pSimLine->sSimVtxCount, pSimLine->sIterationCount);
+#endif
 }
 
 void
@@ -325,6 +334,16 @@ CSimMeshData::GetString(CSimObj* pSimObj) {
 	pSimObj->m_iStreamPos += sTotalSize;
 	return item;
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

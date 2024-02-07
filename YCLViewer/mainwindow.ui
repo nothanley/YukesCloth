@@ -13,6 +13,109 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget{
+	background-color: rgb(20, 30, 40);
+	color: rgb(255,255,255);
+}
+
+QFrame{
+	border: 2px solid white;
+	border-radius: 2px;
+	border-color: rgb(49, 68, 101);
+	alternate-background-color: rgba(31, 46, 74,70);
+}
+
+QScrollBar:vertical{
+	width:  12px;
+	background-color: rgb(31, 24, 38);
+	margin: 0px 0px 0px 0px;
+}
+QScrollBar:handle{
+	min-height: 45px;
+	border-radius: 4px;
+	background-color: rgb(40, 59, 93);
+}
+QScrollBar:arrow{
+	border-radius: 4px;
+	background-color: rgb(50, 69, 103);
+}
+QScrollBar:handle:hover{
+	border-radius: 4px;
+	background-color: rgb(60, 79, 113);
+}
+QScrollBar::sub-page:vertical {
+    background-color: rgb(20, 31, 50)
+}
+
+QScrollBar::add-page:vertical {
+    background-color: rgb(20, 31, 50)
+}
+
+
+QProgressBar{ 
+	color: rgba(255,255,255,200);
+	border: solid grey;
+	border-top-right-radius: 12px;
+	border-top-left-radius: 12px;
+	border-bottom-right-radius: 12px;
+	border-bottom-left-radius: 12px;
+	background-color: rgb(15, 25, 45);
+}
+QProgressBar::chunk {
+	background-color:
+	qlineargradient(
+	spread:pad, x1:0, y1:1, x2:1, y2:0,
+	stop:0 rgba(80, 120, 150, 100), 
+	stop:1 rgba(80, 120, 150, 225));
+
+	border-top-right-radius: 5px;
+	border-top-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+
+QTreeView{
+	border: 2px solid white;
+	background-color: rgb(20, 31, 50);
+	border-radius: 2px;
+	border-color: rgb(49, 68, 101);
+	alternate-background-color: rgba(31, 46, 74,70);
+}
+
+QTreeView:item:hover{
+	alternate-background-color: rgb(255, 255, 127);
+	background-color: rgb(57, 85, 136);
+}
+
+QTreeView:item:selected{
+	alternate-background-color: rgb(255, 255, 127);
+	background-color: rgb(87, 105, 166);
+}
+
+QTreeView:item:pressed{
+	background-color:rgba(255, 255, 255,255);
+	alternate-background-color: rgba(255, 255, 255,255);
+}
+
+QPushButton{
+	color: rgb(255, 255, 255);
+	background-color:rgb(72, 90, 125);
+	border: 0px;
+	border-radius: 2px;
+}
+QPushButton:hover{
+	background-color:rgb(80, 99, 133);
+}
+QPushButton:pressed{
+	background-color:rgb(100, 120, 140);
+}
+
+
+
+</string>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
@@ -31,6 +134,19 @@
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
+        <widget class="QPushButton" name="OpenFile">
+         <property name="minimumSize">
+          <size>
+           <width>98</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Open File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -42,13 +158,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="OpenFile">
-         <property name="text">
-          <string>Open File</string>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>
@@ -78,7 +187,40 @@
         </widget>
        </item>
        <item>
-        <widget class="QTableView" name="tableView"/>
+        <widget class="QWidget" name="widget" native="true">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QTextEdit" name="textEdit">
+            <property name="font">
+             <font>
+              <family>Times New Roman</family>
+              <italic>false</italic>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="lineWrapColumnOrWidth">
+             <number>0</number>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+            <property name="html">
+             <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Times New Roman'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="tableWidget"/>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -91,7 +233,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -106,6 +248,9 @@
   <action name="actionOpen_ycl_file">
    <property name="text">
     <string>Open .ycl file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
    </property>
   </action>
  </widget>

@@ -32,6 +32,7 @@ struct StSimMesh {
 
 	int modelNameIndex;
 	int subObjNameIndex;
+    bool isSimLine;
 };
 
 struct StTag {
@@ -45,6 +46,10 @@ struct StTag {
 	std::vector<StTag*> children;
 	uintptr_t streamPointer;
     std::string sTagName;
+
+#ifdef DEBUG_DISP_BINARY
+    std::vector<uint8_t> data;
+#endif
 };
 
 

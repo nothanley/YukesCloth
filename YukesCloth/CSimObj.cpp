@@ -16,11 +16,18 @@ CSimObj::CSimObj(std::ifstream* fs) {
 void 
 CSimObj::UpdateStrings() {
 
-	for (auto child : m_pStHead->children) {
-		if (child->eType == enTagType_SimMesh) {
+    for (auto child : m_pStHead->children) {
+        uint32_t type = child->eType;
+
+        if (type == enTagType_SimMesh) {
 			child->pSimMesh->modelName = m_sStringTable.at(child->pSimMesh->modelNameIndex);
 			child->pSimMesh->sObjName  = m_sStringTable.at(child->pSimMesh->subObjNameIndex);
 		}
+        else if(type == enTagType_SimLine){
+            child->pSimMesh->modelName = m_sStringTable.at(child->pSimMesh->sName);
+            child->pSimMesh->sObjName = "Line";
+        }
+
 	}
 
 }
@@ -104,6 +111,16 @@ CSimObj::InitTag(StTag& tag) {
 	this->m_iStreamPos = tag.streamPointer-0xC;
 	this->m_pDataStream->seekg(tag.streamPointer);
 
+
+#ifdef DEBUG_DISP_BINARY
+    m_pDataStream->seekg(m_iStreamPos);
+    tag.data.resize(tag.sTotalSize);
+
+    // Read the data from the file into the vector
+    m_pDataStream->read(reinterpret_cast<char*>(tag.data.data()), tag.sTotalSize);
+    m_pDataStream->seekg(tag.streamPointer);
+#endif
+
 	switch (tag.eType) {
 		case enTagType_SimMesh:
 			CSimMeshData::GetSimMesh(tag,this);
@@ -121,6 +138,7 @@ CSimObj::InitTag(StTag& tag) {
 			CSimMeshData::GetRecalcNormalData(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_Skin:
+			printf("\nSkin Data Buffer at %d", uint64_t(m_pDataStream->tellg()));
 			CSimMeshData::GetSkinData(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_SimLinkSrc:
@@ -163,7 +181,7 @@ CSimObj::InitTag(StTag& tag) {
 			CSimMeshData::GetConstraintFixation(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimLine:
-			CSimMeshData::GetSimLines(*tag.pSimMesh,this);
+            CSimMeshData::GetSimLine(tag,this);
 			break;
         case enTagType_StrTbl:
             CSimMeshData::GetStringTable(this);

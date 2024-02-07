@@ -14,6 +14,7 @@ SOURCES += \
     $$PWD/../YukesCloth/CSimObj.cpp \
     $$PWD/../YukesCloth/ClothContainer.cpp \
     $$PWD/../YukesCloth/include/BinaryIO.cpp \
+    defwidgetitem.cpp \
     main.cpp \
     mainwindow.cpp
 
@@ -24,6 +25,7 @@ HEADERS += \
     $$PWD/../YukesCloth/ClothContainer.h \
     $$PWD/../YukesCloth/include/BinaryIO.h \
     $$PWD/../YukesCloth/YukesCloth \
+    defwidgetitem.h \
     mainwindow.h
 
 FORMS += \
@@ -36,3 +38,6 @@ INCLUDEPATH += $$PWD/../YukesCloth/include
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DEFINES += DEBUG_DISP_BINARY
+DEFINES += DEBUG_CONSOLE

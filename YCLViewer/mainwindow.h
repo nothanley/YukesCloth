@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-
+class DefWidgetItem;
 class QTreeWidgetItem;
 class StTag;
 class ClothContainer;
@@ -26,10 +26,12 @@ private slots:
 
     void on_actionOpen_ycl_file_triggered();
 
+    void on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int column);
+
 private:
     Ui::MainWindow *ui;
     void OpenYukesClothFile(const QString& filePath);
-    void appendNodeToView(const StTag* pSourceTag, QTreeWidgetItem* pParentItem);
+    void appendNodeToView(StTag *pSourceTag, DefWidgetItem* pParentItem);
     void PopulateTreeWidget(StTag* pRootNode);
 
     QString m_sYclFilePath;

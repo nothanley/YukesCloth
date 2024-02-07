@@ -3,6 +3,7 @@
 
 #include <QFileDialog>
 #include <YukesCloth>
+#include "defwidgetitem.h"
 #pragma once
 
 MainWindow::MainWindow(QWidget *parent)
@@ -16,6 +17,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
+
 
 void
 MainWindow::on_OpenFile_clicked()
@@ -36,30 +38,30 @@ MainWindow::OpenYukesClothFile(const QString& filePath){
 }
 
 
+void MainWindow::on_actionOpen_ycl_file_triggered()
+{
+    on_OpenFile_clicked();
+}
+
 void
 MainWindow::PopulateTreeWidget(StTag* pRootNode){
     ui->treeWidget->clear();
-
-    /* Populate items to tree */
-    QTreeWidgetItem* pRootItem = new QTreeWidgetItem();
-    pRootItem->setText(0,"[TAG] eType: " + QString::number(pRootNode->eType));
 
     for (const auto child : pRootNode->children)
         appendNodeToView(child, nullptr);
 }
 
-void
-MainWindow::appendNodeToView(const StTag* pSourceTag, QTreeWidgetItem* pParentItem){
 
-    /* Populate items to tree */
-    QTreeWidgetItem* pTreeItem = (pParentItem) ? new QTreeWidgetItem(pParentItem) : new QTreeWidgetItem(ui->treeWidget);
+void
+SetNodeText(const StTag* pSourceTag, DefWidgetItem* pTreeItem){
+    /* Format Text */
     QString sNodeType = QString::fromStdString(yclutils::GetNodeName(pSourceTag->eType));
     pTreeItem->setText(0,"[TAG 0x" + QString::number(pSourceTag->eType,16) + "] - " + sNodeType);
 
-    if (pSourceTag->eType == /* SIMMESH */ 0x5){
+    if (pSourceTag->eType == /* SIMMESH */ 0x5 || pSourceTag->eType == 0x1B){
         QString text = pTreeItem->text(0);
         text += " (" + QString::fromStdString(pSourceTag->pSimMesh->modelName)
-              + " : "+ QString::fromStdString(pSourceTag->pSimMesh->sObjName) + ")";
+                + " : "+ QString::fromStdString(pSourceTag->pSimMesh->sObjName) + ")";
         pTreeItem->setText(0,text);
     }
     else if(pSourceTag->eType == /* STRING */ 0x18){
@@ -67,15 +69,61 @@ MainWindow::appendNodeToView(const StTag* pSourceTag, QTreeWidgetItem* pParentIt
         text += " (" + QString::fromStdString(pSourceTag->sTagName) + ")";
         pTreeItem->setText(0,text);
     }
+}
 
+void
+MainWindow::appendNodeToView(StTag* pSourceTag, DefWidgetItem* pParentItem){
+
+    /* Populate items to tree */
+    DefWidgetItem* pTreeItem = (pParentItem) ? new DefWidgetItem(pParentItem) : new DefWidgetItem(ui->treeWidget);
+    pTreeItem->setItemTag(pSourceTag);
+
+    /* Format Text */
+    SetNodeText(pSourceTag,pTreeItem);
 
     for (const auto child : pSourceTag->children)
         appendNodeToView(child, pTreeItem);
 
 }
 
-void MainWindow::on_actionOpen_ycl_file_triggered()
-{
-    on_OpenFile_clicked();
+QString intToHexQString(int value) {
+    // Convert the integer to a hexadecimal string
+    QString hexString = QString::number(value, 16).toUpper();
+
+    // Ensure that the string has exactly two characters by padding with a leading zero if necessary
+    if (hexString.length() < 2)
+        hexString.prepend('0');
+
+    return hexString;
 }
+
+
+void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int column)
+{
+#ifdef DEBUG_DISP_BINARY
+    ui->textEdit->clear();
+
+    DefWidgetItem* pTreeItem = (DefWidgetItem*)item;
+    StTag* pSourceTag = pTreeItem->getItemTag();
+    QString sDataHexString;
+
+    for (int i = 0; i < pSourceTag->data.size(); i++){
+        auto byte = pSourceTag->data.at(i);
+
+        if (i % 16 == 0)
+            sDataHexString += "\n";
+
+        sDataHexString += " " + intToHexQString(byte);
+    }
+
+    ui->textEdit->setText(sDataHexString);
+#endif
+}
+
+
+
+
+
+
+
 
