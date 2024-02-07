@@ -12,7 +12,7 @@ struct Triangle {
 
 struct StSimMesh {
 	uint32_t numTags;
-	uint32_t sName; /* Index of name @ string table */
+	uint32_t sName;
 	uint32_t sSimVtxCount;
 	uint32_t sIterationCount;
 
@@ -29,19 +29,16 @@ struct StSimMesh {
 	std::vector<Vector4> skinPaste;
 };
 
-struct StHead {
-	uint32_t eType;
-	uint32_t sTagCount;
-	uint32_t sTotalSize;
-	uint32_t sSize;
-};
-
 struct StTag {
 	uint32_t eType;
 	uint32_t sSize;
 	uint32_t sTotalSize;
+	uint32_t sTagCount;
+
 	StSimMesh stSimMesh;
 	StTag* pParent = nullptr;
+	std::vector<StTag*> children;
+	uintptr_t streamPointer;
 };
 
 struct StSimMesh_AssignSubObj {
@@ -54,6 +51,7 @@ struct StSimMesh_AssignSubObj {
 namespace yclutils {
 
 	void debugPrintFloats(std::vector<Vector4>* floatArray);
-
+	bool hasIndex(const std::vector<int>& vec, int target);
+    std::string GetNodeName(const uint32_t &tagEnum);
 };
 

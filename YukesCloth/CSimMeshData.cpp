@@ -38,8 +38,6 @@ CSimMeshData::AssignSubObj(StSimMesh& sMesh, const CSimObj* pSimObj) {
 void
 CSimMeshData::AssignSubObjVtx(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	/* Reads and assigns an index to each vertex in specified subobject */
-	printf("\n\t\t* SimMesh_AssignSubObjVtx()... \n");
-	
 
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
 	uint32_t numVerts = _U32;
@@ -53,8 +51,6 @@ CSimMeshData::AssignSubObjVtx(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::AssignSimVtx(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* enTagType_SimMesh_AssignSimVtx()... \n");
-
 	uint32_t unkVal0 = _U32;
 	uint32_t unkVal1 = _U32;
 	uint32_t numSimVerts = _U32;
@@ -68,8 +64,6 @@ CSimMeshData::AssignSimVtx(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetRecalcNormalData(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading RCN Stream... \n");
-
 	uint32_t unkVal0 = _U32;
 	uint32_t unkVal1 = _U32;
 	uint32_t unkVal2 = _U32;
@@ -79,7 +73,6 @@ CSimMeshData::GetRecalcNormalData(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Skin Stream... \n");
 	uintptr_t skinBufferAddress = pSimObj->m_iStreamPos + 0x20;
 
 	for (int i = 0; i < sMesh.sSimVtxCount; i++) {
@@ -98,7 +91,6 @@ CSimMeshData::GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::LinkSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Link Stream... \n");
 	uint32_t numTriangles = _U32;
 
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
@@ -110,23 +102,17 @@ CSimMeshData::LinkSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSimMeshPattern(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Pattern Stream... \n");
-
 	uint32_t unkVal0 = _U32;
 	sMesh.bSimPattern = _S32;
 }
 
 void
 CSimMeshData::GetSimMeshStacks(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stacks Stream... \n");
-
 	uint32_t unkVal0 = _U32;
 }
 
 void
 CSimMeshData::GetSkinCalc(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading SkinCalc Stream... \n");
-
 	uint32_t numSkinVerts = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
 
@@ -144,8 +130,6 @@ CSimMeshData::GetSkinCalc(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSkinPaste(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	uint32_t numPasteVerts = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
 
@@ -159,8 +143,6 @@ CSimMeshData::GetSkinPaste(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::SaveOldVtxs(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	uint32_t numVerts = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
 
@@ -173,8 +155,6 @@ CSimMeshData::SaveOldVtxs(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetForce(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	uint32_t numVerts = _U32;
 	float unkVal0 = _FLOAT;
 	float unkVal1 = _FLOAT;
@@ -190,8 +170,6 @@ CSimMeshData::GetForce(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetConstraintStretchLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	uint32_t numLinks = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
 
@@ -207,8 +185,6 @@ CSimMeshData::GetConstraintStretchLink(StSimMesh& sMesh, const CSimObj* pSimObj)
 
 void
 CSimMeshData::GetConstraintStandardLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	uint32_t numLinks = _U32;
 	uint32_t unkVal = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
@@ -225,8 +201,6 @@ CSimMeshData::GetConstraintStandardLink(StSimMesh& sMesh, const CSimObj* pSimObj
 
 void
 CSimMeshData::GetConstraintBendLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	uint32_t numLinks = _U32;
 	uint32_t unkVal = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
@@ -243,15 +217,12 @@ CSimMeshData::GetConstraintBendLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetBendStiffness(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	uint32_t numTris = _U32;
 	uint32_t unkVal = _U32;
 	float unkFloat = _FLOAT;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
 
-	for (int i = 0; i < numTris; i++)
-	{
+	for (int i = 0; i < numTris; i++){
 		uint16_t indexA = _U16;
 		uint16_t indexB = _U16;
 		uint16_t indexC = _U32;
@@ -265,8 +236,6 @@ CSimMeshData::GetBendStiffness(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	int32_t unkSValue0 = _S32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x30);
 
@@ -294,8 +263,6 @@ CSimMeshData::GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetConstraintFixation(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	uint32_t numVerts = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
 
@@ -308,8 +275,6 @@ CSimMeshData::GetConstraintFixation(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSimLines(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	printf("\n\t\t* Reading Stream... \n");
-
 	uint32_t unkVal0 = _U32;
 	uint32_t unkVal1 = _U32;
 	uint32_t unkVal2 = _U32;

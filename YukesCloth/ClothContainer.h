@@ -6,6 +6,7 @@
 using namespace std;
 using namespace BinaryIO;
 
+class CSimObj;
 class ClothContainer {
 	enum {
 		YCLHEAD = 0x0
@@ -18,6 +19,7 @@ public:
 		fs->close();
 	}
 
+	CSimObj* m_pClothSimObj = nullptr;
 
 private:
 	void Load();
@@ -29,6 +31,5 @@ private:
 	uint64_t m_iFileSize;
 	float m_fVersion;
 	bool isOk = false;
-
 
 };

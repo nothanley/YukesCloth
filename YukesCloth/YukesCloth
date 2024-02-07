@@ -1,0 +1,4 @@
+#include <ClothContainer.h>
+#include <CClothStructs.h>
+#include <CSimObj.h>
+#pragma once

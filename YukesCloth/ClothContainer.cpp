@@ -24,8 +24,8 @@ void ClothContainer::Load() {
 void ClothContainer::ReadContents() {
 	printf("Opening File: %s\n", m_sFilePath.c_str());
 
-	CSimObj _clothObj(fs);
-	_clothObj.Create();
+	m_pClothSimObj = new CSimObj(fs);
+	m_pClothSimObj->Create();
 
 }
 

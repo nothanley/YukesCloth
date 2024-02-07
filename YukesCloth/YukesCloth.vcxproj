@@ -132,7 +132,9 @@
     <ClCompile Include="ClothContainer.cpp" />
     <ClCompile Include="CSimMeshData.cpp" />
     <ClCompile Include="CSimObj.cpp" />
-    <ClCompile Include="include\BinaryIO.cpp" />
+    <ClCompile Include="include\BinaryIO.cpp">
+      <DeploymentContent>false</DeploymentContent>
+    </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="CClothStructs.cpp" />
   </ItemGroup>
