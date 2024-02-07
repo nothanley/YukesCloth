@@ -21,12 +21,17 @@ struct StSimMesh {
 	bool bSimPattern;
 
 	std::string modelName;
+	std::string sObjName;
+
 	std::vector<uint32_t> sObjVerts;
 	std::vector<uint32_t> simVerts;
 	std::vector<Vector4> skinData;
 	std::vector<Triangle> linkFaces;
 	std::vector<Vector4> skinCalc;
 	std::vector<Vector4> skinPaste;
+
+	int modelNameIndex;
+	int subObjNameIndex;
 };
 
 struct StTag {
@@ -35,23 +40,27 @@ struct StTag {
 	uint32_t sTotalSize;
 	uint32_t sTagCount;
 
-	StSimMesh stSimMesh;
+	StSimMesh* pSimMesh = nullptr;
 	StTag* pParent = nullptr;
 	std::vector<StTag*> children;
 	uintptr_t streamPointer;
-};
-
-struct StSimMesh_AssignSubObj {
-	uint32_t numTags;
-	uint32_t sModelName;
-	uint32_t sObjName;
+    std::string sTagName;
 };
 
 
 namespace yclutils {
-
 	void debugPrintFloats(std::vector<Vector4>* floatArray);
 	bool hasIndex(const std::vector<int>& vec, int target);
     std::string GetNodeName(const uint32_t &tagEnum);
 };
+
+
+
+
+
+
+
+
+
+
 

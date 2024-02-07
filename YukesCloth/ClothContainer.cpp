@@ -26,7 +26,6 @@ void ClothContainer::ReadContents() {
 
 	m_pClothSimObj = new CSimObj(fs);
 	m_pClothSimObj->Create();
-
 }
 
 void ClothContainer::ValidateContainer() {

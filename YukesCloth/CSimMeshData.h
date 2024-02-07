@@ -88,6 +88,8 @@ class CSimMeshData
         static void GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetConstraintFixation(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetSimLines(StSimMesh& sMesh, const CSimObj* pSimObj);
+        static void GetStringTable(CSimObj* pSimObj);
+        static std::string GetString(CSimObj* pSimObj);
 };
 
 /* ==== Logged ===== */

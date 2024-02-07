@@ -11,27 +11,31 @@ using namespace BinaryIO;
 
 void
 CSimMeshData::GetSimMesh(StTag& parent, const CSimObj* pSimObj) {
+
 	/* Initialize and get Sim Mesh stream */
-	StSimMesh _SimMesh{ _U32, _U32, _U32, _U32, _U32, _U32 };
-	parent.stSimMesh = _SimMesh;
+	StSimMesh* _SimMesh = new StSimMesh{ _U32, _U32, _U32, _U32, (bool)_U32, (bool)_U32 };
 
 #ifdef DEBUG_CONSOLE
 	//printf("Pos: %d\n", uint64_t(this->m_pDataStream->tellg()) );
 	printf("\n\t\t- StSimMesh {sTags: %d, sName:%d, sSimVtxCount:%d, sIterationCount:%d, bCalcNormal: %s, bDispObject: %s}\n",
-		_SimMesh.numTags, _SimMesh.sName, _SimMesh.sSimVtxCount,
-		_SimMesh.sIterationCount, _SimMesh.bCalcNormal ? "true" : "false",
-		_SimMesh.bDispObject ? "true" : "false");
+		_SimMesh->numTags, _SimMesh->sName, _SimMesh->sSimVtxCount,
+		_SimMesh->sIterationCount, _SimMesh->bCalcNormal ? "true" : "false",
+		_SimMesh->bDispObject ? "true" : "false");
 #endif
 
+	/* Assign sim mesh pointer */
+	parent.pSimMesh = _SimMesh;
 }
 
 void
 CSimMeshData::AssignSubObj(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	StSimMesh_AssignSubObj _SubObj{ _U32, _U32, _U32, };
+	uint32_t numTags = _U32;
+	sMesh.modelNameIndex = _U32;
+	sMesh.subObjNameIndex = _U32;
 
 #ifdef DEBUG_CONSOLE
 	printf("\n\t\t- StSimMesh_AssignSubObj {sTags: %d, sModelName:%d, sObjName:%d }\n",
-		_SubObj.numTags, _SubObj.sModelName, _SubObj.sObjName);
+		numTags, sMesh.modelNameIndex, sMesh.subObjNameIndex);
 #endif
 }
 
@@ -73,6 +77,11 @@ CSimMeshData::GetRecalcNormalData(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj) {
+	if (!&sMesh) {
+		printf("Could not parse skin data - Missing sim mesh destination.\n");
+		return;
+	}
+
 	uintptr_t skinBufferAddress = pSimObj->m_iStreamPos + 0x20;
 
 	for (int i = 0; i < sMesh.sSimVtxCount; i++) {
@@ -102,6 +111,11 @@ CSimMeshData::LinkSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSimMeshPattern(StSimMesh& sMesh, const CSimObj* pSimObj) {
+	if (!&sMesh) {
+		printf("Could not parse skin pattern - Missing sim mesh destination.\n");
+		return;
+	}
+
 	uint32_t unkVal0 = _U32;
 	sMesh.bSimPattern = _S32;
 }
@@ -280,3 +294,42 @@ CSimMeshData::GetSimLines(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t unkVal2 = _U32;
 	uint32_t unkVal3 = _U32;
 }
+
+void
+CSimMeshData::GetStringTable(CSimObj* pSimObj){
+    pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos+0x8);
+    uint32_t numNodes = _U32;
+    uint32_t numStrings = _U32;
+
+    printf("Total Strings: %d\n", numStrings);
+	pSimObj->m_iStreamPos += 0x20;
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos);
+
+    for (int i = 0; i < numStrings; i++){
+		std::string item = GetString(pSimObj);
+        pSimObj->m_sStringTable.push_back(item);
+    }
+}
+
+std::string
+CSimMeshData::GetString(CSimObj* pSimObj) {
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos);
+	uint32_t eTagType = _U32;
+	uint32_t sSize = _U32;
+	uint32_t sTotalSize = _U32;
+	uint32_t numChildNodes = _U32;
+
+	int charBufferSize = sTotalSize - 0x10;
+	std::string item = ReadString(*pSimObj->m_pDataStream, charBufferSize);
+
+	pSimObj->m_iStreamPos += sTotalSize;
+	return item;
+}
+
+
+
+
+
+
+
+

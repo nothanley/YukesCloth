@@ -24,6 +24,8 @@ public:
 private slots:
     void on_OpenFile_clicked();
 
+    void on_actionOpen_ycl_file_triggered();
+
 private:
     Ui::MainWindow *ui;
     void OpenYukesClothFile(const QString& filePath);

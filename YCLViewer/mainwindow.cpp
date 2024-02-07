@@ -41,33 +41,41 @@ MainWindow::PopulateTreeWidget(StTag* pRootNode){
     ui->treeWidget->clear();
 
     /* Populate items to tree */
-    QTreeWidgetItem* pRootItem = new QTreeWidgetItem(ui->treeWidget);
+    QTreeWidgetItem* pRootItem = new QTreeWidgetItem();
     pRootItem->setText(0,"[TAG] eType: " + QString::number(pRootNode->eType));
 
     for (const auto child : pRootNode->children)
-        appendNodeToView(child, pRootItem);
+        appendNodeToView(child, nullptr);
 }
 
 void
 MainWindow::appendNodeToView(const StTag* pSourceTag, QTreeWidgetItem* pParentItem){
 
     /* Populate items to tree */
-    QTreeWidgetItem* pTreeItem = new QTreeWidgetItem(pParentItem);
+    QTreeWidgetItem* pTreeItem = (pParentItem) ? new QTreeWidgetItem(pParentItem) : new QTreeWidgetItem(ui->treeWidget);
     QString sNodeType = QString::fromStdString(yclutils::GetNodeName(pSourceTag->eType));
-    pTreeItem->setText(0,"[TAG - " + QString::number(pSourceTag->eType) + "] - " + sNodeType);
+    pTreeItem->setText(0,"[TAG 0x" + QString::number(pSourceTag->eType,16) + "] - " + sNodeType);
+
+    if (pSourceTag->eType == /* SIMMESH */ 0x5){
+        QString text = pTreeItem->text(0);
+        text += " (" + QString::fromStdString(pSourceTag->pSimMesh->modelName)
+              + " : "+ QString::fromStdString(pSourceTag->pSimMesh->sObjName) + ")";
+        pTreeItem->setText(0,text);
+    }
+    else if(pSourceTag->eType == /* STRING */ 0x18){
+        QString text = pTreeItem->text(0);
+        text += " (" + QString::fromStdString(pSourceTag->sTagName) + ")";
+        pTreeItem->setText(0,text);
+    }
+
 
     for (const auto child : pSourceTag->children)
         appendNodeToView(child, pTreeItem);
 
 }
 
-
-
-
-
-
-
-
-
-
+void MainWindow::on_actionOpen_ycl_file_triggered()
+{
+    on_OpenFile_clicked();
+}
 

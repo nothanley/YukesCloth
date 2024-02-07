@@ -21,12 +21,15 @@ private:
 	void InitTag(StTag& tag);
 	void SetupTags(StTag* tag);
 	StTag* GetTag(uintptr_t& streamBegin, StTag* pParentTag = nullptr);
+	void UpdateStrings();
 
 private:
+    std::vector<int> rootNodes{ 1,2,5,6,9,19,23,25,27,31 };
+    std::vector<std::string> m_sStringTable;
 
-	std::ifstream* m_pDataStream;
+private:
+	std::ifstream* m_pDataStream = nullptr;
 	uintptr_t m_iStreamPos = std::ios::beg;
-	std::vector<int> rootNodes{ 1,2,5,6,9,19,23,25,27,31 };
 
 	friend class CSimMeshData;
 };

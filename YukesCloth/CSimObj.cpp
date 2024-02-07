@@ -13,6 +13,18 @@ CSimObj::CSimObj(std::ifstream* fs) {
 	this->m_pDataStream = fs;
 }
 
+void 
+CSimObj::UpdateStrings() {
+
+	for (auto child : m_pStHead->children) {
+		if (child->eType == enTagType_SimMesh) {
+			child->pSimMesh->modelName = m_sStringTable.at(child->pSimMesh->modelNameIndex);
+			child->pSimMesh->sObjName  = m_sStringTable.at(child->pSimMesh->subObjNameIndex);
+		}
+	}
+
+}
+
 void
 CSimObj::Create() {
 	/* Initialize Tag Header */
@@ -32,6 +44,7 @@ CSimObj::Create() {
 	}
 
 	SetupTags(m_pStHead);
+	UpdateStrings();
 };
 
 void
@@ -42,6 +55,10 @@ CSimObj::SetupTags(StTag* pParentTag) {
 
 	/* Setup and LOAD all child nodes */
 	for (int i = 0; i < pParentTag->children.size(); i++) {
+
+		if (pParentTag->pSimMesh)
+			pParentTag->children.at(i)->pSimMesh = pParentTag->pSimMesh;
+
 		SetupTags( pParentTag->children.at(i) );
 	}
 
@@ -72,7 +89,7 @@ CSimObj::GetTag(uintptr_t& streamBegin, StTag* pParentTag) {
 	streamBegin += (numNodes == 0) ? stDataTag->sTotalSize : stDataTag->sSize;
 
 	for (uint32_t i = 0; i < numNodes; i++) {
-		GetTag(streamBegin, stDataTag);
+		StTag* childNode = GetTag(streamBegin, stDataTag);
 	}
 
 	return stDataTag;
@@ -82,73 +99,99 @@ CSimObj::GetTag(uintptr_t& streamBegin, StTag* pParentTag) {
 void
 CSimObj::InitTag(StTag& tag) {
 
+	if (tag.eType == 0x0) { return; }
+
 	this->m_iStreamPos = tag.streamPointer-0xC;
-	m_pDataStream->seekg(m_iStreamPos);
+	this->m_pDataStream->seekg(tag.streamPointer);
 
 	switch (tag.eType) {
 		case enTagType_SimMesh:
 			CSimMeshData::GetSimMesh(tag,this);
 			break;
 		case enTagType_SimMesh_AssignSubObj:
-			CSimMeshData::AssignSubObj(tag.pParent->stSimMesh,this);
+			CSimMeshData::AssignSubObj(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_AssignSubObjVtx:
-			CSimMeshData::AssignSubObjVtx(tag.pParent->stSimMesh,this);
+			CSimMeshData::AssignSubObjVtx(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_AssignSimVtx:
-			CSimMeshData::AssignSimVtx(tag.pParent->stSimMesh,this);
+			CSimMeshData::AssignSimVtx(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_RCN:
-			CSimMeshData::GetRecalcNormalData(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetRecalcNormalData(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_Skin:
-			CSimMeshData::GetSkinData(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetSkinData(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_SimLinkSrc:
-			CSimMeshData::LinkSourceMesh(tag.pParent->stSimMesh,this);
+			CSimMeshData::LinkSourceMesh(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_Pattern:
-			CSimMeshData::GetSimMeshPattern(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetSimMeshPattern(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_Stacks:
-			CSimMeshData::GetSimMeshStacks(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetSimMeshStacks(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_SkinCalc:
-			CSimMeshData::GetSkinCalc(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetSkinCalc(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_SkinPaste:
-			CSimMeshData::GetSkinPaste(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetSkinPaste(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_OldVtxSave:
-			CSimMeshData::SaveOldVtxs(tag.pParent->stSimMesh,this);
+			CSimMeshData::SaveOldVtxs(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_Force:
-			CSimMeshData::GetForce(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetForce(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_CtStretchLink:
-			CSimMeshData::GetConstraintStretchLink(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetConstraintStretchLink(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_CtStdLink:
-			CSimMeshData::GetConstraintStandardLink(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetConstraintStandardLink(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_CtBendLink:
-			CSimMeshData::GetConstraintBendLink(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetConstraintBendLink(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_BendingStiffness:
-			CSimMeshData::GetBendStiffness(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetBendStiffness(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_ColVtx:
-			CSimMeshData::GetCollisionVerts(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetCollisionVerts(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_CtFixation:
-			CSimMeshData::GetConstraintFixation(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetConstraintFixation(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimLine:
-			CSimMeshData::GetSimLines(tag.pParent->stSimMesh,this);
+			CSimMeshData::GetSimLines(*tag.pSimMesh,this);
+			break;
+        case enTagType_StrTbl:
+            CSimMeshData::GetStringTable(this);
+            break;
+		case enTagType_String:
+            tag.sTagName = CSimMeshData::GetString(this);
 			break;
 		default:
-			printf("No Suitable Operator Found for TagType: %d\n", tag.eType);
+//			printf("No Suitable Operator Found for TagType: %d\n", tag.eType);
 			break;
 
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
