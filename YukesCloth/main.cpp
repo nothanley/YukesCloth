@@ -2,12 +2,8 @@
 
 #include "ClothContainer.h"
 #include <iostream>
-
 int main()
 {
-    
-    /*ClothContainer _yclContainer(
-        "C:\\Users\\wauke\\Desktop\\W24_DevResearch\\YCL\\SmallSamples\\_ HAIR - 00170 - MAIN\\hair_00170.ycl");*/
 
     ClothContainer _yclContainer(
         "C:\\Users\\wauke\\Desktop\\W24_DevResearch\\YCL\\SmallSamples\\00458\\621_Attire.ycl");
