@@ -41,8 +41,6 @@ CSimMeshData::AssignSubObj(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::AssignSubObjVtx(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	/* Reads and assigns an index to each vertex in specified subobject */
-
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
 	uint32_t numVerts = _U32;
 
@@ -67,12 +65,25 @@ CSimMeshData::AssignSimVtx(StSimMesh& sMesh, const CSimObj* pSimObj) {
 }
 
 void
-CSimMeshData::GetRecalcNormalData(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	uint32_t unkVal0 = _U32;
-	uint32_t unkVal1 = _U32;
+CSimMeshData::GetRCNData(StSimMesh& sMesh, const CSimObj* pSimObj) {
+	uint32_t numNodes = _U32;
+	uint32_t numUnksA = _U32;
+	uint32_t numUnksB = _U32;
 	uint32_t unkVal2 = _U32;
-	uint32_t unkVal3 = _U32;
 }
+
+void
+CSimMeshData::GetRecalcNormals(StSimMesh& sMesh, const CSimObj* pSimObj) {
+	uint32_t numNodes = _U32;
+
+	uint32_t numUnksA = _U32;
+	uint32_t numUnksB = _U32;
+
+	uint32_t sBufferSizeA = _U32;
+	uint32_t sBufferSizeB = _U32;
+	/* Parse table here...*/
+}
+
 
 
 void
@@ -99,10 +110,12 @@ CSimMeshData::GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj) {
 }
 
 void
-CSimMeshData::LinkSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj) {
+CSimMeshData::Link_DefineSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numTriangles = _U32;
 
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
+
+	/* Define source edges */
 	for (int i = 0; i < numTriangles; i++) {
 		sMesh.linkFaces.push_back(Triangle{ _U16, _U16, _U32 });
 	}
@@ -116,7 +129,7 @@ CSimMeshData::GetSimMeshPattern(StSimMesh& sMesh, const CSimObj* pSimObj) {
 		return;
 	}
 
-	uint32_t unkVal0 = _U32;
+	uint32_t numNodes = _U32;
 	sMesh.bSimPattern = _S32;
 }
 
@@ -172,6 +185,8 @@ CSimMeshData::GetForce(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numVerts = _U32;
 	float unkVal0 = _FLOAT;
 	float unkVal1 = _FLOAT;
+	float unkVal2 = _FLOAT;
+	float unkVal3 = _FLOAT;
 
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x30);
 	for (int i = 0; i < numVerts; i++)
@@ -336,7 +351,25 @@ CSimMeshData::GetString(CSimObj* pSimObj) {
 }
 
 
+void
+CSimMeshData::GetLineDef(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
+	LineDef lineDefs;
+	lineDefs.sSize = _U32;
+	lineDefs.vec.resize(lineDefs.sSize);
+
+	for (int i = 0; i < lineDefs.sSize; i++) {
+		uint32_t index = _U32;
+		uint32_t nodeBegin  = _U32;
+		uint32_t nodeEnd = _U32;
+
+		/* ...do logic here...*/
+		/* Iterates from nodes a-b and interpolate's
+		node world matrices from assignNode buffer */
+		lineDefs.vec.at(index) = Points{ nodeBegin, nodeEnd };
+	}
+
+}
 
 
 

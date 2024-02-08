@@ -100,11 +100,14 @@ QString intToHexQString(int value) {
 
 void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int column)
 {
-#ifdef DEBUG_DISP_BINARY
-    ui->textEdit->clear();
-
     DefWidgetItem* pTreeItem = (DefWidgetItem*)item;
     StTag* pSourceTag = pTreeItem->getItemTag();
+
+    ui->textEdit->clear();
+    ui->ItemAddress->clear();
+    ui->ItemName->clear();
+
+#ifdef DEBUG_DISP_BINARY
     QString sDataHexString;
 
     for (int i = 0; i < pSourceTag->data.size(); i++){
@@ -118,6 +121,9 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int colu
 
     ui->textEdit->setText(sDataHexString);
 #endif
+
+    ui->ItemName->setText( yclutils::GetNodeName(pSourceTag->eType).c_str() );
+    ui->ItemAddress->setText( "0x"+QString::number(pSourceTag->streamPointer-0xC,16).toUpper() );
 }
 
 

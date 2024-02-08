@@ -72,9 +72,10 @@ class CSimMeshData
         static void AssignSubObj(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void AssignSubObjVtx(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void AssignSimVtx(StSimMesh& sMesh, const CSimObj* pSimObj);
-        static void GetRecalcNormalData(StSimMesh& sMesh, const CSimObj* pSimObj);
+        static void GetRCNData(StSimMesh& sMesh, const CSimObj* pSimObj);
+        static void GetRecalcNormals(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj);
-        static void LinkSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj);
+        static void Link_DefineSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetSimMeshPattern(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetSimMeshStacks(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetSkinCalc(StSimMesh& sMesh, const CSimObj* pSimObj);
@@ -88,6 +89,7 @@ class CSimMeshData
         static void GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetConstraintFixation(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetSimLine(StTag &pTag, const CSimObj* pSimObj);
+        static void GetLineDef(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetStringTable(CSimObj* pSimObj);
         static std::string GetString(CSimObj* pSimObj);
 };

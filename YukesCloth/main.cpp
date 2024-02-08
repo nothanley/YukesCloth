@@ -6,6 +6,6 @@ int main()
 {
 
     ClothContainer _yclContainer(
-        "C:\\Users\\wauke\\Desktop\\W24_DevResearch\\YCL\\SmallSamples\\_ HAIR - 00170 - MAIN\\VCLA Demo-2022\\hair_00170.ycl");
+        "C:\\Users\\wauke\\Desktop\\W24_DevResearch\\YCL\\SmallSamples\\_ HAIR - 00170 - MAIN\\hair_00170.ycl");
 
 }

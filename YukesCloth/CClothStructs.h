@@ -10,6 +10,17 @@ struct Triangle {
 	uint32_t point0, point1, point2;
 };
 
+struct Points {
+	uint32_t x, y;
+};
+
+struct LineDef {
+	uint32_t sSize;
+	uint32_t index;
+	std::vector<Points> vec;
+};
+
+
 struct StSimMesh {
 	uint32_t numTags;
 	uint32_t sName;

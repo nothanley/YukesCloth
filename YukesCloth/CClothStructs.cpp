@@ -9,7 +9,7 @@ using namespace BinaryIO;
 
 void
 yclutils::debugPrintFloats(std::vector<Vector4>* floatArray) {
-	std::string filePath = "C:\\Users\\wauke\\Desktop\\gen_skin_data.bin";
+	std::string filePath = "";
 	std::ofstream outputFile(filePath.c_str(), ios_base::binary);
 
 	if (!outputFile.is_open()) {

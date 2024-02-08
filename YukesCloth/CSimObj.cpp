@@ -135,14 +135,17 @@ CSimObj::InitTag(StTag& tag) {
 			CSimMeshData::AssignSimVtx(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_RCN:
-			CSimMeshData::GetRecalcNormalData(*tag.pSimMesh,this);
+			CSimMeshData::GetRCNData(*tag.pSimMesh,this);
+			break;
+		case enTagType_SimMesh_RCNSubObj:
+			CSimMeshData::GetRecalcNormals(*tag.pSimMesh, this);
 			break;
 		case enTagType_SimMesh_Skin:
 			printf("\nSkin Data Buffer at %d", uint64_t(m_pDataStream->tellg()));
 			CSimMeshData::GetSkinData(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_SimLinkSrc:
-			CSimMeshData::LinkSourceMesh(*tag.pSimMesh,this);
+			CSimMeshData::Link_DefineSourceMesh(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_Pattern:
 			CSimMeshData::GetSimMeshPattern(*tag.pSimMesh,this);
@@ -182,6 +185,9 @@ CSimObj::InitTag(StTag& tag) {
 			break;
 		case enTagType_SimLine:
             CSimMeshData::GetSimLine(tag,this);
+			break;
+		case enTagType_SimLine_LineDef:
+			CSimMeshData::GetLineDef(*tag.pSimMesh, this);
 			break;
         case enTagType_StrTbl:
             CSimMeshData::GetStringTable(this);
