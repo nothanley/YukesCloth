@@ -20,6 +20,9 @@ struct LineDef {
 	std::vector<Points> vec;
 };
 
+struct SimProperty {
+	uint32_t item;
+};
 
 struct StSimMesh {
 	uint32_t numTags;
@@ -40,6 +43,7 @@ struct StSimMesh {
 	std::vector<Triangle> linkFaces;
 	std::vector<Vector4> skinCalc;
 	std::vector<Vector4> skinPaste;
+    std::vector<SimProperty> properties;
 
 	int modelNameIndex;
 	int subObjNameIndex;

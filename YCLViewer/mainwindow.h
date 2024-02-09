@@ -28,6 +28,8 @@ private slots:
 
     void on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int column);
 
+    void on_actionExpand_Collapse_triggered();
+
 private:
     Ui::MainWindow *ui;
     void OpenYukesClothFile(const QString& filePath);
@@ -37,6 +39,6 @@ private:
     QString m_sYclFilePath;
     ClothContainer* m_pYclFile = nullptr;
     QString m_sExplorerPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation); // Cache Explorer Directory
-
+    bool isExpanded = false;
 };
 #endif // MAINWINDOW_H

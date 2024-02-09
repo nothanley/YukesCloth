@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/build-YCLViewer-Qt_5_15_2_msvc2019_64-Debug
+/build-YCLViewer-Qt_5_15_2_msvc2019_64-Release
+/include/OpenGL
+/include/Resources

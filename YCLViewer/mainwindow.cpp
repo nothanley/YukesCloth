@@ -49,6 +49,15 @@ MainWindow::PopulateTreeWidget(StTag* pRootNode){
 
     for (const auto child : pRootNode->children)
         appendNodeToView(child, nullptr);
+
+    if (isExpanded)
+    {
+        ui->treeWidget->expandAll();
+    }
+    else{
+        ui->treeWidget->collapseAll();
+    }
+
 }
 
 
@@ -125,6 +134,23 @@ void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int colu
     ui->ItemName->setText( yclutils::GetNodeName(pSourceTag->eType).c_str() );
     ui->ItemAddress->setText( "0x"+QString::number(pSourceTag->streamPointer-0xC,16).toUpper() );
 }
+
+
+
+
+void MainWindow::on_actionExpand_Collapse_triggered()
+{
+    if (isExpanded){
+        ui->treeWidget->collapseAll();
+    }
+    else{
+        ui->treeWidget->expandAll();
+    }
+
+    isExpanded = !isExpanded;
+}
+
+
 
 
 

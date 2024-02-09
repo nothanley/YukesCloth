@@ -137,6 +137,7 @@
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="CClothStructs.cpp" />
+    <ClCompile Include="Node Documentation" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClothContainer.h" />

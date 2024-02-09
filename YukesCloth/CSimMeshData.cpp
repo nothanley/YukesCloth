@@ -135,7 +135,8 @@ CSimMeshData::GetSimMeshPattern(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSimMeshStacks(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	uint32_t unkVal0 = _U32;
+    uint32_t numProperties = _U32;
+    sMesh.properties.resize(numProperties);
 }
 
 void
@@ -162,8 +163,7 @@ CSimMeshData::GetSkinPaste(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 	for (int i = 0; i < numPasteVerts; i++)
 	{
-		uint32_t patternIdx = _U32;
-		/* todo: interpret index values */
+		uint32_t skinIdx = _U32;
 	}
 
 }
@@ -176,7 +176,6 @@ CSimMeshData::SaveOldVtxs(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	for (int i = 0; i < numVerts; i++)
 	{
 		uint32_t vertIdx = _U32;
-		/* todo: interpret index values */
 	}
 }
 

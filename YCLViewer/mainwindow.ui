@@ -299,6 +299,7 @@ p, li { white-space: pre-wrap; }
      <string>File</string>
     </property>
     <addaction name="actionOpen_ycl_file"/>
+    <addaction name="actionExpand_Collapse"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -309,6 +310,14 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionExpand_Collapse">
+   <property name="text">
+    <string>Expand/Collapse</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
  </widget>

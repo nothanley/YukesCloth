@@ -141,7 +141,7 @@ CSimObj::InitTag(StTag& tag) {
 			CSimMeshData::GetRecalcNormals(*tag.pSimMesh, this);
 			break;
 		case enTagType_SimMesh_Skin:
-			printf("\nSkin Data Buffer at %d", uint64_t(m_pDataStream->tellg()));
+//			printf("\nSkin Data Buffer at %d", uint64_t(m_pDataStream->tellg()));
 			CSimMeshData::GetSkinData(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_SimLinkSrc:
@@ -151,7 +151,7 @@ CSimObj::InitTag(StTag& tag) {
 			CSimMeshData::GetSimMeshPattern(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_Stacks:
-			CSimMeshData::GetSimMeshStacks(*tag.pSimMesh,this);
+            CSimMeshData::GetSimMeshStacks(tag,this);
 			break;
 		case enTagType_SimMesh_SkinCalc:
 			CSimMeshData::GetSkinCalc(*tag.pSimMesh,this);
