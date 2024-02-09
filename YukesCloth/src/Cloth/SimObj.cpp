@@ -1,8 +1,8 @@
 #include <vector>
-#include "CSimObj.h"
+#include "SimObj.h"
 #include <BinaryIO.h>
-#include "CClothStructs.h"
-#include "CSimMeshData.h"
+#include "ClothStructs.h"
+#include "SimMesh.h"
 using namespace BinaryIO;
 
 #ifdef DEBUG_CONSOLE
@@ -20,11 +20,11 @@ CSimObj::UpdateStrings() {
         uint32_t type = child->eType;
 
         if (type == enTagType_SimMesh) {
-			child->pSimMesh->modelName = m_sStringTable.at(child->pSimMesh->modelNameIndex);
-			child->pSimMesh->sObjName  = m_sStringTable.at(child->pSimMesh->subObjNameIndex);
+			child->pSimMesh->name = m_sStringTable.at(child->pSimMesh->sMeshIndex);
+            child->pSimMesh->sObjName  = m_sStringTable.at(child->pSimMesh->sObjIndex);
 		}
         else if(type == enTagType_SimLine){
-            child->pSimMesh->modelName = m_sStringTable.at(child->pSimMesh->sName);
+            child->pSimMesh->name = m_sStringTable.at(child->pSimMesh->sNameIdx);
             child->pSimMesh->sObjName = "Line";
         }
 
@@ -50,9 +50,47 @@ CSimObj::Create() {
 		GetTag(m_iStreamPos, m_pStHead);
 	}
 
+	/* Setup node and string tables */
+	StTag* nTableTag = FindTag(enTagType_NodeTbl);
+	if (nTableTag) { InitTag(*nTableTag); }
+	StTag* strTableTag = FindTag(enTagType_StrTbl);
+	if (strTableTag) { InitTag(*strTableTag); }
+
+	/* Initialize all other tags */
 	SetupTags(m_pStHead);
 	UpdateStrings();
 };
+
+StTag*
+CSimObj::FindTag(uint32_t enTagType) {
+
+	for (auto child : m_pStHead->children) {
+		if (child->eType == enTagType) {
+			return child;
+		}
+	}
+
+	return nullptr;
+}
+
+StTag*
+CSimObj::FindTag(uint32_t enTagType, StTag* pParent){
+	StTag* result = nullptr;
+
+	for (auto child : pParent->children) {
+		if (child->eType == enTagType) {
+			return child;
+		}
+
+		result = FindTag(enTagType, child);
+
+		if (result)
+			break;
+	}
+
+	return result;
+}
+
 
 void
 CSimObj::SetupTags(StTag* pParentTag) {
@@ -102,12 +140,24 @@ CSimObj::GetTag(uintptr_t& streamBegin, StTag* pParentTag) {
 	return stDataTag;
 }
 
+void
+CSimObj::InitializeNodePalette(const StTag& tag) {
+
+	uintptr_t address = m_iStreamPos;
+	StTag* assignTag = FindTag(enTagType_SimLine_AssignNode, tag.pParent);
+	if (!assignTag) return;
+
+	assignTag->pSimMesh = tag.pParent->pSimMesh;
+	InitTag(*assignTag);
+
+	m_iStreamPos = address;
+	m_pDataStream->seekg(tag.streamPointer);
+}
 
 void
 CSimObj::InitTag(StTag& tag) {
 
 	if (tag.eType == 0x0) { return; }
-
 	this->m_iStreamPos = tag.streamPointer-0xC;
 	this->m_pDataStream->seekg(tag.streamPointer);
 
@@ -134,6 +184,10 @@ CSimObj::InitTag(StTag& tag) {
 		case enTagType_SimMesh_AssignSimVtx:
 			CSimMeshData::AssignSimVtx(*tag.pSimMesh,this);
 			break;
+		case enTagType_SimLine_AssignNode:
+			if (tag.pSimMesh->nodePalette.size() > 0) { break; }
+			CSimMeshData::AssignNode(*tag.pParent->pSimMesh, this);
+			break;
 		case enTagType_SimMesh_RCN:
 			CSimMeshData::GetRCNData(*tag.pSimMesh,this);
 			break;
@@ -141,7 +195,6 @@ CSimObj::InitTag(StTag& tag) {
 			CSimMeshData::GetRecalcNormals(*tag.pSimMesh, this);
 			break;
 		case enTagType_SimMesh_Skin:
-//			printf("\nSkin Data Buffer at %d", uint64_t(m_pDataStream->tellg()));
 			CSimMeshData::GetSkinData(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_SimLinkSrc:
@@ -187,13 +240,19 @@ CSimObj::InitTag(StTag& tag) {
             CSimMeshData::GetSimLine(tag,this);
 			break;
 		case enTagType_SimLine_LineDef:
+			InitializeNodePalette(tag);
 			CSimMeshData::GetLineDef(*tag.pSimMesh, this);
 			break;
         case enTagType_StrTbl:
+			if (this->m_sStringTable.size() > 0) { break; }
             CSimMeshData::GetStringTable(this);
             break;
 		case enTagType_String:
             tag.sTagName = CSimMeshData::GetString(this);
+			break;
+		case enTagType_NodeTbl:
+			if (this->m_NodeTable.size() > 0) { break; }
+			CSimMeshData::GetNodeTable(this);
 			break;
 		default:
 //			printf("No Suitable Operator Found for TagType: %d\n", tag.eType);

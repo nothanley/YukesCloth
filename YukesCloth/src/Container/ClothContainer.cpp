@@ -1,5 +1,5 @@
 #include "ClothContainer.h"
-#include "CSimObj.h"
+#include "../Cloth/SimObj.h"
 #include "winsock.h"
 
 using namespace std;

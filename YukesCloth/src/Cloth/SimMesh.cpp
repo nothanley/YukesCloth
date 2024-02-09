@@ -1,6 +1,6 @@
-#include "CSimMeshData.h"
+#include "SimMesh.h"
 #include "BinaryIO.h"
-#include "CSimObj.h"
+#include "SimObj.h"
 using namespace BinaryIO;
 
 #define _U32  ReadUInt32(*pSimObj->m_pDataStream)
@@ -19,7 +19,7 @@ CSimMeshData::GetSimMesh(StTag& parent, const CSimObj* pSimObj) {
 #ifdef DEBUG_CONSOLE
 	//printf("Pos: %d\n", uint64_t(this->m_pDataStream->tellg()) );
 	printf("\n\t\t- StSimMesh {sTags: %d, sName:%d, sSimVtxCount:%d, sIterationCount:%d, bCalcNormal: %s, bDispObject: %s}\n",
-		_SimMesh->numTags, _SimMesh->sName, _SimMesh->sSimVtxCount,
+		_SimMesh->numTags, _SimMesh->sNameIdx, _SimMesh->sSimVtxCount,
 		_SimMesh->sIterationCount, _SimMesh->bCalcNormal ? "true" : "false",
 		_SimMesh->bDispObject ? "true" : "false");
 #endif
@@ -31,12 +31,12 @@ CSimMeshData::GetSimMesh(StTag& parent, const CSimObj* pSimObj) {
 void
 CSimMeshData::AssignSubObj(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numTags = _U32;
-	sMesh.modelNameIndex = _U32;
-	sMesh.subObjNameIndex = _U32;
+	sMesh.sMeshIndex = _U32;
+	sMesh.sObjIndex = _U32;
 
 #ifdef DEBUG_CONSOLE
 	printf("\n\t\t- StSimMesh_AssignSubObj {sTags: %d, sModelName:%d, sObjName:%d }\n",
-		numTags, sMesh.modelNameIndex, sMesh.subObjNameIndex);
+		numTags, sMesh.sMeshIndex, sMesh.sObjIndex);
 #endif
 }
 
@@ -126,7 +126,7 @@ CSimMeshData::GetRecalcNormals(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj) {
-    if (!&sMesh || sMesh.isSimLine) {
+    if (!&sMesh || sMesh.bIsSimLine) {
 		printf("Could not parse skin data - Missing sim mesh destination.\n");
 		return;
 	}
@@ -162,7 +162,7 @@ CSimMeshData::Link_DefineSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSimMeshPattern(StSimMesh& sMesh, const CSimObj* pSimObj) {
-    if (!&sMesh || sMesh.isSimLine) {
+    if (!&sMesh || sMesh.bIsSimLine) {
 		printf("Could not parse skin pattern - Missing sim mesh destination.\n");
 		return;
 	}
@@ -217,7 +217,7 @@ CSimMeshData::SaveOldVtxs(StSimMesh& sMesh, const CSimObj* pSimObj) {
 void
 CSimMeshData::GetForce(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numVerts = _U32;
-	sMesh.force.parameters{ _FLOAT, _FLOAT, _FLOAT, _FLOAT };
+    sMesh.force.parameters = std::vector<float>{ _FLOAT, _FLOAT, _FLOAT, _FLOAT };
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x30);
 
 	for (int i = 0; i < numVerts; i++)
@@ -356,15 +356,15 @@ void
 CSimMeshData::GetSimLine(StTag& pTag, const CSimObj* pSimObj) {
     StSimMesh* pSimLine = new StSimMesh;
     pSimLine->numTags = _U32;
-    pSimLine->sName = _U32;
+    pSimLine->sNameIdx = _U32;
     pSimLine->sSimVtxCount = _U32;
     pSimLine->sIterationCount = _U32;
-    pSimLine->isSimLine = true;
+    pSimLine->bIsSimLine = true;
     pTag.pSimMesh = pSimLine;
 
 #ifdef DEBUG_CONSOLE
     printf("\n\t\t- StSimLine {sTags: %d, sName:%d, sSimVtxCount:%d, sIterationCount:%d}\n",
-           pSimLine->numTags, pSimLine->sName,
+           pSimLine->numTags, pSimLine->sNameIdx,
            pSimLine->sSimVtxCount, pSimLine->sIterationCount);
 #endif
 }
@@ -402,24 +402,60 @@ CSimMeshData::GetString(CSimObj* pSimObj) {
 
 
 void
-CSimMeshData::GetLineDef(StSimMesh& sMesh, const CSimObj* pSimObj) {
+CSimMeshData::GetLineDef(StSimMesh& sMesh, CSimObj* pSimObj) {
+	uint32_t numLines = _U32;
+	sMesh.lines.sSize = numLines;
+	sMesh.lines.links.resize(numLines);
 
-	LineDef lineDefs;
-	lineDefs.sSize = _U32;
-	lineDefs.vec.resize(lineDefs.sSize);
-
-	for (int i = 0; i < lineDefs.sSize; i++) {
+	for (int i = 0; i < numLines; i++) {
 		uint32_t index = _U32;
 		uint32_t nodeBegin  = _U32;
 		uint32_t nodeEnd = _U32;
+		
+		/* Collect all linked nodes and append to line def*/
+		NodeLink nodeLink = NodeLink{ nodeBegin, nodeEnd };
+		for (int j = nodeBegin; j < nodeEnd; j++) {
+			SimNode& node  = sMesh.nodePalette.at(j);
+			nodeLink.link.push_back(node);
+		}
 
-		/* ...do logic here...*/
-		/* Iterates from nodes a-b and interpolate's
-		node world matrices from assignNode buffer */
-		lineDefs.vec.at(index) = NodeLink{ nodeBegin, nodeEnd };
+		sMesh.lines.links.at(index) = nodeLink;
 	}
-
 }
+
+void
+CSimMeshData::AssignNode(StSimMesh& sLine, CSimObj* pSimObj)
+{
+    uint32_t numNodes = _U32;
+
+    for (int i = 0; i < numNodes; i++)
+    {
+        Vector4 matrixf{_FLOAT,_FLOAT,_FLOAT};
+        uint32_t index = _U32;
+
+		SimNode sNode = pSimObj->m_NodeTable.at(index);
+		sNode.vecf = matrixf;
+		sLine.nodePalette.push_back(sNode);
+    }
+}
+
+void 
+CSimMeshData::GetNodeTable(CSimObj* pSimObj) {
+	uint32_t numChildren = _U32;
+	uint32_t numNodes = _U32;
+	pSimObj->m_NodeTable.resize(numNodes);
+
+	printf("Total Nodes: %d\n", numNodes);
+	pSimObj->m_iStreamPos += 0x20;
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos);
+
+    for (uint32_t i = 0; i < numNodes; i++) {
+        SimNode node{ i , GetString(pSimObj) };
+		pSimObj->m_NodeTable.at(i) = node;
+	}
+}
+
+
 
 
 

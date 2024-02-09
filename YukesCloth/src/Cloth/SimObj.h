@@ -6,14 +6,13 @@
 class StHead;
 class StTag;
 class StSimMesh;
-#define DEBUG_TOTAL_NODES 18;
+class SimNode;
 
 class CSimObj
 {
 
 public:
 	StTag* m_pStHead = nullptr;
-
 	CSimObj(std::ifstream* fs);
 	void Create();
 
@@ -21,11 +20,15 @@ private:
 	void InitTag(StTag& tag);
 	void SetupTags(StTag* tag);
 	StTag* GetTag(uintptr_t& streamBegin, StTag* pParentTag = nullptr);
+	StTag* FindTag(uint32_t enTagType); /* Non-Recursive root search */
+	StTag* FindTag(uint32_t enTagType, StTag* pParent); /* Recursive relative search */
+	void InitializeNodePalette(const StTag& parent);
 	void UpdateStrings();
 
 private:
     std::vector<int> rootNodes{ 1,2,5,6,9,19,23,25,27,31 };
     std::vector<std::string> m_sStringTable;
+	std::vector<SimNode> m_NodeTable;
 
 private:
 	std::ifstream* m_pDataStream = nullptr;

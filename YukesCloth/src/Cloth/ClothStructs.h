@@ -9,6 +9,7 @@ struct Vector4 {
 struct Triangle {
 	uint32_t point0, point1, point2;
 };
+
 struct SkinVertex {
 	uint32_t index;
 	float weight;
@@ -18,15 +19,22 @@ struct Points {
 	SkinVertex x, y;
 };
 
+struct SimNode {
+    uint32_t index;
+    std::string name;
+    Vector4 vecf;
+};
+
 struct NodeLink {
-	uint32_t x;
-	uint32_t y;
+    uint32_t begin_index;
+    uint32_t end_index;
+    std::vector<SimNode> link;
 };
 
 struct LineDef {
 	uint32_t sSize;
 	uint32_t index;
-	std::vector<NodeLink> vec;
+	std::vector<NodeLink> links;
 };
 
 struct EdgeConstraint {
@@ -71,7 +79,7 @@ struct CollisionVerts {
 
 struct StSimMesh {
 	uint32_t numTags;
-	uint32_t sName;
+	uint32_t sNameIdx;
 	uint32_t sSimVtxCount;
 	uint32_t sIterationCount;
 
@@ -79,24 +87,27 @@ struct StSimMesh {
 	bool bDispObject;
 	bool bSimPattern;
 
-	std::string modelName;
+	bool bIsSimLine;
+    int sMeshIndex;
+    int sObjIndex;
+
+	std::string name;
 	std::string sObjName;
 
 	std::vector<uint32_t> sObjVerts;
 	std::vector<uint32_t> simVerts;
 	std::vector<uint32_t> saveVerts;
-	std::vector<Vector4> skinData;
-	std::vector<Triangle> sourceEdges;
-	std::vector<Vector4> skinCalc;
+    std::vector<Vector4> skinData;
+    std::vector<Vector4> skinCalc;
 	std::vector<uint32_t> skinPaste;
+	std::vector<Triangle> sourceEdges;
     std::vector<SimConstraint> constraints;
+	std::vector<SimNode> nodePalette;
+
 	CollisionVerts colVtx;
 	RCNData rcn;
 	ForceField force;
-
-	int modelNameIndex;
-	int subObjNameIndex;
-    bool isSimLine;
+	LineDef lines;
 };
 
 struct StTag {

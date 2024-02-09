@@ -1,6 +1,6 @@
 /* Defines all sim stream parsing and interpretation logic. */
 
-#include "CClothStructs.h"
+#include "ClothStructs.h"
 #include <cstdint>
 #pragma once
 
@@ -89,31 +89,10 @@ class CSimMeshData
         static void GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetConstraintFixation(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetSimLine(StTag &pTag, const CSimObj* pSimObj);
-        static void GetLineDef(StSimMesh& sMesh, const CSimObj* pSimObj);
+        static void AssignNode(StSimMesh& sLine, CSimObj* pSimObj);
+        static void GetLineDef(StSimMesh& sMesh, CSimObj* pSimObj);
         static void GetStringTable(CSimObj* pSimObj);
+        static void GetNodeTable(CSimObj* pSimObj);
         static std::string GetString(CSimObj* pSimObj);
 };
 
-/* ==== Logged ===== */
-//enTagType_SimMesh = 0x5,
-//enTagType_SimMesh_AssignSubObj = 0x6,
-//enTagType_SimMesh_AssignSubObjVtx = 0x7,
-//enTagType_SimMesh_AssignSimVtx = 0x8,
-//enTagType_SimMesh_RCN = 0x13,
-//enTagType_SimMesh_Skin = 0x15,
-//enTagType_SimMesh_SimLinkSrc = 0x16,
-//enTagType_SimMesh_Pattern = 0x1F,
-//enTagType_SimMesh_Stacks = 0x09,
-//enTagType_SimMesh_SkinCalc = 0xA,
-//enTagType_SimMesh_SkinPaste = 0xB,
-//enTagType_SimMesh_OldVtxSave = 0x1A,
-//enTagType_SimMesh_Force = 0xC,
-//enTagType_SimMesh_CtStretchLink = 0x21,
-//enTagType_SimMesh_CtStdLink = 0xD,
-//enTagType_SimMesh_CtBendLink = 0xE,
-//enTagType_SimMesh_BendingStiffness = 0x38,
-//enTagType_SimMesh_ColVtx = 0x12,
-//enTagType_SimMesh_CtFixation = 0x10,
-//enTagType_SimLine = 0x1B //<----------
-/* ... */
-/* todo: complete enums */
