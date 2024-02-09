@@ -151,7 +151,7 @@ CSimObj::InitTag(StTag& tag) {
 			CSimMeshData::GetSimMeshPattern(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_Stacks:
-            CSimMeshData::GetSimMeshStacks(tag,this);
+            CSimMeshData::GetSimMeshStacks(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_SkinCalc:
 			CSimMeshData::GetSkinCalc(*tag.pSimMesh,this);

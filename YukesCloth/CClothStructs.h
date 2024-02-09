@@ -9,19 +9,64 @@ struct Vector4 {
 struct Triangle {
 	uint32_t point0, point1, point2;
 };
+struct SkinVertex {
+	uint32_t index;
+	float weight;
+};
 
 struct Points {
-	uint32_t x, y;
+	SkinVertex x, y;
+};
+
+struct NodeLink {
+	uint32_t x;
+	uint32_t y;
 };
 
 struct LineDef {
 	uint32_t sSize;
 	uint32_t index;
-	std::vector<Points> vec;
+	std::vector<NodeLink> vec;
 };
 
-struct SimProperty {
-	uint32_t item;
+struct EdgeConstraint {
+	Points vertices;
+};
+
+struct FaceConstraint {
+	SkinVertex x, y, z;
+	std::vector<float> weights;
+};
+
+struct RCNData {
+	std::vector<uint32_t> parameters;
+	std::vector<uint8_t> sizesA;
+	std::vector<uint8_t> sizesB;
+	std::vector<uint32_t> values;
+	std::vector<SkinVertex> elements;
+};
+
+struct SimConstraint {
+	std::string name;
+	uint32_t type;
+	std::vector<EdgeConstraint> data;
+	std::vector<FaceConstraint> faceData;
+};
+
+struct ForceField {
+	std::vector<float> parameters;
+	std::vector<SkinVertex> data;
+};
+
+struct CollisionVerts {
+	int32_t unkFlag;
+	uint32_t unkVal;
+	uint32_t numItems;
+	uint32_t numVerts;
+	int32_t unkFlagB;
+
+	std::vector<Points> items;
+	std::vector<uint32_t> indices;
 };
 
 struct StSimMesh {
@@ -39,11 +84,15 @@ struct StSimMesh {
 
 	std::vector<uint32_t> sObjVerts;
 	std::vector<uint32_t> simVerts;
+	std::vector<uint32_t> saveVerts;
 	std::vector<Vector4> skinData;
-	std::vector<Triangle> linkFaces;
+	std::vector<Triangle> sourceEdges;
 	std::vector<Vector4> skinCalc;
-	std::vector<Vector4> skinPaste;
-    std::vector<SimProperty> properties;
+	std::vector<uint32_t> skinPaste;
+    std::vector<SimConstraint> constraints;
+	CollisionVerts colVtx;
+	RCNData rcn;
+	ForceField force;
 
 	int modelNameIndex;
 	int subObjNameIndex;

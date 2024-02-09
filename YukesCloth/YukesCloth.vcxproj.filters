@@ -29,9 +29,6 @@
     <ClCompile Include="CSimMeshData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Node Documentation">
-      <Filter>Header Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClothContainer.h">

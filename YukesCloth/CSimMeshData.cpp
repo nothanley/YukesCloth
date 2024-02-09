@@ -6,6 +6,7 @@ using namespace BinaryIO;
 #define _U32  ReadUInt32(*pSimObj->m_pDataStream)
 #define _S32  ReadSInt32(*pSimObj->m_pDataStream)
 #define _U16  ReadUShort(*pSimObj->m_pDataStream)
+#define _U8  ReadByte(*pSimObj->m_pDataStream)
 #define _BOOL ReadBool(*pSimObj->m_pDataStream)
 #define _FLOAT ReadFloat(*pSimObj->m_pDataStream)
 
@@ -67,21 +68,58 @@ CSimMeshData::AssignSimVtx(StSimMesh& sMesh, const CSimObj* pSimObj) {
 void
 CSimMeshData::GetRCNData(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numNodes = _U32;
-	uint32_t numUnksA = _U32;
-	uint32_t numUnksB = _U32;
-	uint32_t unkVal2 = _U32;
+
+	sMesh.rcn.parameters.push_back(_U32);
+	sMesh.rcn.parameters.push_back(_U32); /* number of item a */
+	sMesh.rcn.parameters.push_back(_U32);
+	sMesh.rcn.parameters.push_back(_U32); /* number of item b */
 }
 
 void
 CSimMeshData::GetRecalcNormals(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numNodes = _U32;
-
-	uint32_t numUnksA = _U32;
-	uint32_t numUnksB = _U32;
-
+	uint32_t numElementsA = _U32;
+	uint32_t numElementsB = _U32;
 	uint32_t sBufferSizeA = _U32;
 	uint32_t sBufferSizeB = _U32;
-	/* Parse table here...*/
+
+	/* Gets the total length of each element */
+	for (int i = 0; i < numElementsA; i++) {
+		uint8_t size = _U8;
+		sMesh.rcn.sizesA.push_back(size);
+	}
+
+	/* align buffer */
+	while (pSimObj->m_pDataStream->tellg() % 8 != 0) {
+		ReadByte(*pSimObj->m_pDataStream);
+	}
+
+	/* Reads element index values using specified length value */
+	for (int i = 0; i < numElementsA; i++) {
+		uint8_t totalIndices = sMesh.rcn.sizesA.at(i);
+		for (int j = 0; j < totalIndices; j++) {
+			sMesh.rcn.values.push_back(_U32);
+		}
+	}
+
+	/* Gets the total length of each element */
+	for (int i = 0; i < numElementsB; i++) {
+		uint8_t size = _U8;
+		sMesh.rcn.sizesB.push_back(size);
+	}
+
+	/* align buffer */
+	while (pSimObj->m_pDataStream->tellg() % 4 != 0) {
+		ReadByte(*pSimObj->m_pDataStream);
+	}
+
+	/* Reads element index values using specified length value */
+	for (int i = 0; i < numElementsB; i++) {
+		uint8_t totalIndices = sMesh.rcn.sizesB.at(i);
+		for (int j = 0; j < totalIndices; j++) {
+			sMesh.rcn.elements.push_back(SkinVertex{ _U32 ,_FLOAT });
+		}
+	}
 }
 
 
@@ -117,7 +155,7 @@ CSimMeshData::Link_DefineSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 	/* Define source edges */
 	for (int i = 0; i < numTriangles; i++) {
-		sMesh.linkFaces.push_back(Triangle{ _U16, _U16, _U32 });
+		sMesh.sourceEdges.push_back(Triangle{ _U16, _U16, _U32 });
 	}
 
 }
@@ -136,7 +174,6 @@ CSimMeshData::GetSimMeshPattern(StSimMesh& sMesh, const CSimObj* pSimObj) {
 void
 CSimMeshData::GetSimMeshStacks(StSimMesh& sMesh, const CSimObj* pSimObj) {
     uint32_t numProperties = _U32;
-    sMesh.properties.resize(numProperties);
 }
 
 void
@@ -146,13 +183,11 @@ CSimMeshData::GetSkinCalc(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 	for (int i = 0; i < numSkinVerts; i++)
 	{
-		uint32_t patternIdx = _U32;
-
-		/* Get Node Skin Matrix */
-		Vector4 skinWeight = sMesh.skinData.at(patternIdx);
+		uint32_t vertIdx = _U32;
+		Vector4 skinWeight = sMesh.skinData.at(vertIdx);
 		sMesh.skinCalc.push_back(skinWeight);
+		/* calls nodeskinmatrix */
 	}
-
 }
 
 
@@ -164,8 +199,8 @@ CSimMeshData::GetSkinPaste(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	for (int i = 0; i < numPasteVerts; i++)
 	{
 		uint32_t skinIdx = _U32;
+		sMesh.skinPaste.push_back(_U32);
 	}
-
 }
 
 void
@@ -175,23 +210,19 @@ CSimMeshData::SaveOldVtxs(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 	for (int i = 0; i < numVerts; i++)
 	{
-		uint32_t vertIdx = _U32;
+		sMesh.saveVerts.push_back(_U32);
 	}
 }
 
 void
 CSimMeshData::GetForce(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numVerts = _U32;
-	float unkVal0 = _FLOAT;
-	float unkVal1 = _FLOAT;
-	float unkVal2 = _FLOAT;
-	float unkVal3 = _FLOAT;
-
+	sMesh.force.parameters{ _FLOAT, _FLOAT, _FLOAT, _FLOAT };
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x30);
+
 	for (int i = 0; i < numVerts; i++)
 	{
-		uint32_t vertIdx = _U32;
-		float unkFloatVal = _FLOAT;
+		sMesh.force.data.push_back(SkinVertex{_U32,_FLOAT});
 	}
 }
 
@@ -200,15 +231,19 @@ void
 CSimMeshData::GetConstraintStretchLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numLinks = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
+	SimConstraint stretchConstraint{ "Stretch", enTagType_SimMesh_CtStretchLink };
 
 	for (int i = 0; i < numLinks; i++)
 	{
-		uint32_t indexA = _U32;
-		uint32_t indexB = _U32;
+		EdgeConstraint edgeLink;
+		edgeLink.vertices.x.index = _U32;
+		edgeLink.vertices.y.index = _U32;
 
-		float unkFloatValA = _FLOAT;
-		float unkFloatValB = _FLOAT;
+		edgeLink.vertices.x.weight = _FLOAT;
+		edgeLink.vertices.y.weight = _FLOAT;;
+		stretchConstraint.data.push_back(edgeLink);
 	}
+	printf("");
 }
 
 void
@@ -216,14 +251,17 @@ CSimMeshData::GetConstraintStandardLink(StSimMesh& sMesh, const CSimObj* pSimObj
 	uint32_t numLinks = _U32;
 	uint32_t unkVal = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
+	SimConstraint constraint{ "Standard", enTagType_SimMesh_CtStdLink };
 
 	for (int i = 0; i < numLinks; i++)
 	{
-		uint16_t indexA = _U16;
-		uint16_t indexB = _U16;
+		EdgeConstraint edgeLink;
+		edgeLink.vertices.x.index = _U16;
+		edgeLink.vertices.y.index = _U16;
 
-		float unkFloatValA = _FLOAT;
-		float unkFloatValB = _FLOAT;
+		edgeLink.vertices.x.weight = _FLOAT;
+		edgeLink.vertices.y.weight = _FLOAT;;
+		constraint.data.push_back(edgeLink);
 	}
 }
 
@@ -232,14 +270,17 @@ CSimMeshData::GetConstraintBendLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numLinks = _U32;
 	uint32_t unkVal = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
+	SimConstraint constraint{ "Bend", enTagType_SimMesh_CtBendLink };
 
 	for (int i = 0; i < numLinks; i++)
 	{
-		uint16_t indexA = _U16;
-		uint16_t indexB = _U16;
+		EdgeConstraint edgeLink;
+		edgeLink.vertices.x.index = _U16;
+		edgeLink.vertices.y.index = _U16;
 
-		float unkFloatValA = _FLOAT;
-		float unkFloatValB = _FLOAT;
+		edgeLink.vertices.x.weight = _FLOAT;
+		edgeLink.vertices.y.weight = _FLOAT;;
+		constraint.data.push_back(edgeLink);
 	}
 }
 
@@ -249,42 +290,49 @@ CSimMeshData::GetBendStiffness(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t unkVal = _U32;
 	float unkFloat = _FLOAT;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
+	SimConstraint constraint{ "BendStiffness", enTagType_SimMesh_BendingStiffness };
 
 	for (int i = 0; i < numTris; i++){
-		uint16_t indexA = _U16;
-		uint16_t indexB = _U16;
-		uint16_t indexC = _U32;
+		FaceConstraint face;
 
-		float unkFloatValA = _FLOAT;
-		float unkFloatValB = _FLOAT;
-		float unkFloatValC = _FLOAT;
-		float unkFloatValD = _FLOAT;
+		face.x.index = _U16;
+		face.y.index = _U16;
+		face.z.index = _U32;
+
+		face.weights.push_back(_FLOAT);
+		face.weights.push_back(_FLOAT);
+		face.weights.push_back(_FLOAT);
+		face.weights.push_back(_FLOAT);
+
+		constraint.faceData.push_back(face);
 	}
 }
 
 void
 CSimMeshData::GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	int32_t unkSValue0 = _S32;
+	sMesh.colVtx.unkFlag = _S32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x30);
 
-	uint32_t unkVal = _U32;
-	uint32_t numUnks = _U32;
-	uint32_t numVerts = _U32;
-	int32_t unkSValue1 = _S32;
+	sMesh.colVtx.unkVal = _S32;
+	sMesh.colVtx.numItems = _S32;
+	sMesh.colVtx.numVerts = _S32;
+	sMesh.colVtx.unkFlagB = _S32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x50);
 
-	for (int i = 0; i < numUnks; i++)
+	for (int i = 0; i < sMesh.colVtx.numItems; i++)
 	{
-		uint32_t indexA = _U32;
-		uint32_t indexB = _U32;
+		Points segment;
+		segment.x.index = _U32;
+		segment.y.index = _U32;
 
-		float unkFloatValA = _FLOAT;
-		float unkFloatValB = _FLOAT;
+		segment.x.weight = _FLOAT;
+		segment.y.weight = _FLOAT;
+		sMesh.colVtx.items.push_back(segment);
 	}
 
-	for (int i = 0; i < numVerts; i++)
+	for (int i = 0; i < sMesh.colVtx.numVerts; i++)
 	{
-		uint32_t vertIndex = _U32;
+		sMesh.colVtx.indices.push_back(_U32);
 	}
 
 }
@@ -293,11 +341,14 @@ void
 CSimMeshData::GetConstraintFixation(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numVerts = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
+	SimConstraint constraint{ "Fixation", enTagType_SimMesh_CtFixation };
 
 	for (int i = 0; i < numVerts; i++)
 	{
-		uint32_t vertIdx = _U32;
-		float unkFloatVal = _FLOAT;
+		EdgeConstraint edge;
+		edge.vertices.x.index = _U32;
+		edge.vertices.x.weight = _FLOAT;
+		constraint.data.push_back(edge);
 	}
 }
 
@@ -365,7 +416,7 @@ CSimMeshData::GetLineDef(StSimMesh& sMesh, const CSimObj* pSimObj) {
 		/* ...do logic here...*/
 		/* Iterates from nodes a-b and interpolate's
 		node world matrices from assignNode buffer */
-		lineDefs.vec.at(index) = Points{ nodeBegin, nodeEnd };
+		lineDefs.vec.at(index) = NodeLink{ nodeBegin, nodeEnd };
 	}
 
 }
