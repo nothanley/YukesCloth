@@ -91,7 +91,7 @@ struct StSimMesh {
     int sMeshIndex;
     int sObjIndex;
 
-	std::string name;
+	std::string sModelName;
 	std::string sObjName;
 
 	std::vector<uint32_t> sObjVerts;

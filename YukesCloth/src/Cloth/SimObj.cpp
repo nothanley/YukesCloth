@@ -1,8 +1,8 @@
 #include <vector>
-#include "SimObj.h"
 #include <BinaryIO.h>
-#include "ClothStructs.h"
+#include "SimObj.h"
 #include "SimMesh.h"
+#include "ClothStructs.h"
 using namespace BinaryIO;
 
 #ifdef DEBUG_CONSOLE
@@ -20,11 +20,11 @@ CSimObj::UpdateStrings() {
         uint32_t type = child->eType;
 
         if (type == enTagType_SimMesh) {
-			child->pSimMesh->name = m_sStringTable.at(child->pSimMesh->sMeshIndex);
+			child->pSimMesh->sModelName = m_sStringTable.at(child->pSimMesh->sMeshIndex);
             child->pSimMesh->sObjName  = m_sStringTable.at(child->pSimMesh->sObjIndex);
 		}
         else if(type == enTagType_SimLine){
-            child->pSimMesh->name = m_sStringTable.at(child->pSimMesh->sNameIdx);
+            child->pSimMesh->sModelName = m_sStringTable.at(child->pSimMesh->sNameIdx);
             child->pSimMesh->sObjName = "Line";
         }
 

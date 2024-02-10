@@ -4,6 +4,7 @@
 #include <winsock.h>
 #include <istream>
 #include <vector>
+#include <sstream>
 using namespace std;
 
 std::string
@@ -164,6 +165,51 @@ BinaryIO::WriteSignature(ofstream* fs, std::string value) {
 	uint32_t* streamHeader = reinterpret_cast<uint32_t*>(&value);
 	*streamHeader = ntohl(*streamHeader);
 	WriteUInt32(fs, *streamHeader);
+}
+
+void 
+BinaryIO::WriteUInt64(std::stringstream& ss, uint64_t value) {
+	ss.write(reinterpret_cast<const char*>(&value), sizeof(uint64_t));
+}
+void 
+BinaryIO::WriteUInt32(std::stringstream& ss, uint32_t value) {
+	ss.write(reinterpret_cast<const char*>(&value), sizeof(uint32_t));
+}
+void 
+BinaryIO::WriteUInt16(std::stringstream& ss, uint16_t value) {
+	ss.write(reinterpret_cast<const char*>(&value), sizeof(uint16_t));
+}
+void 
+BinaryIO::WriteByte(std::stringstream& ss, uint8_t value) {
+	ss.write(reinterpret_cast<const char*>(&value), sizeof(uint8_t));
+}
+void 
+BinaryIO::WriteBool(std::stringstream& ss, bool flag) {
+	ss.write(reinterpret_cast<const char*>(&flag), sizeof(bool));
+}
+void 
+BinaryIO::WriteInt32(std::stringstream& ss, int32_t value) {
+	ss.write(reinterpret_cast<const char*>(&value), sizeof(int32_t));
+}
+void 
+BinaryIO::WriteFloat(std::stringstream& ss, float value) {
+	ss.write(reinterpret_cast<const char*>(&value), sizeof(float));
+}
+
+void 
+BinaryIO::WriteString(std::stringstream& ss, const std::string& str) {
+	WriteChars(ss, str);
+}
+void 
+BinaryIO::WriteChars(std::stringstream& ss, const std::string& value) {
+	WriteUInt32(ss, value.size() + 1);
+	ss.write(value.c_str(), value.size() + 1);
+}
+void 
+BinaryIO::WriteSignature(std::stringstream& ss, const std::string& value) {
+	uint32_t streamHeader = *reinterpret_cast<const uint32_t*>(value.c_str());
+	streamHeader = ntohl(streamHeader);
+	WriteUInt32(ss, streamHeader);
 }
 
 

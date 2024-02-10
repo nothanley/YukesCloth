@@ -7,6 +7,7 @@
 class CSimObj;
 
 enum {
+    enTagType_Root = 0x0,
     enTagType_Cols = 0x01,
     enTagType_ColPack = 0x02,
     enTagType_Capsule_Standard = 0x03,

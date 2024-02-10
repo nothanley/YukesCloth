@@ -11,7 +11,7 @@ QT_END_NAMESPACE
 class DefWidgetItem;
 class QTreeWidgetItem;
 class StTag;
-class ClothContainer;
+class CClothContainer;
 
 class MainWindow : public QMainWindow
 {
@@ -37,7 +37,7 @@ private:
     void PopulateTreeWidget(StTag* pRootNode);
 
     QString m_sYclFilePath;
-    ClothContainer* m_pYclFile = nullptr;
+    CClothContainer* m_pYclFile = nullptr;
     QString m_sExplorerPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation); // Cache Explorer Directory
     bool isExpanded = false;
 };
