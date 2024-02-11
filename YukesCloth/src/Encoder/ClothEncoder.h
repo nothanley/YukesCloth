@@ -26,6 +26,27 @@ private:
 	void EncodeSubObjVerts(TagBuffer* pTag);
 	void EncodeRecalcNormals(TagBuffer* pTag);
 	void EncodeRCNData(TagBuffer* pTag);
+	void EncodeSimMeshSkin(TagBuffer* pTag);
+	void EncodeSimLinkSource(TagBuffer* pTag);
+	void EncodePatternEntry(TagBuffer* pTag);
+	void EncodeStacks(TagBuffer* pTag);
+	void EncodeSkinCalc(TagBuffer* pTag);
+	void EncodeSkinPaste(TagBuffer* pTag);
+	void EncodeVertexSave(TagBuffer* pTag);
+	void EncodeForceField(TagBuffer* pTag);
+	void EncodeConstraint_Stretch(TagBuffer* pTag);
+	void EncodeConstraint_Std(TagBuffer* pTag);
+	void EncodeConstraint_Bend(TagBuffer* pTag);
+	void EncodeBendStiffness(TagBuffer* pTag);
+	void EncodeColVerts(TagBuffer* pTag);
+	void EncodeConstraint_Fixation(TagBuffer* pTag);
+	void EncodeSimLine(TagBuffer* pTag);
+	void EncodeLineDef(TagBuffer* pTag);
+	void EncodeAssignNode(TagBuffer* pTag);
+	void EncodeLinkTar(TagBuffer* pTag);
+	void EncodeStringTable(TagBuffer* pTag);
+	void EncodeString(TagBuffer* pTag);
+	void EncodeNodeTable(TagBuffer* pTag);
 
 private:
 	uint32_t GetTagTotalSize(TagBuffer* pTag);

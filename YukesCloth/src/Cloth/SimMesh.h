@@ -94,6 +94,7 @@ class CSimMeshData
         static void GetLineDef(StSimMesh& sMesh, CSimObj* pSimObj);
         static void GetStringTable(CSimObj* pSimObj);
         static void GetNodeTable(CSimObj* pSimObj);
+        static void GetLinkTar(StSimMesh& sLine, CSimObj* pSimObj);
         static std::string GetString(CSimObj* pSimObj);
 };
 

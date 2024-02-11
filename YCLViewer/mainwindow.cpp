@@ -68,7 +68,7 @@ SetNodeText(const StTag* pSourceTag, DefWidgetItem* pTreeItem){
 
     if (pSourceTag->eType == /* SIMMESH */ 0x5 || pSourceTag->eType == 0x1B){
         QString text = pTreeItem->text(0);
-        text += " (" + QString::fromStdString(pSourceTag->pSimMesh->name)
+        text += " (" + QString::fromStdString(pSourceTag->pSimMesh->sObjName)
                 + " : "+ QString::fromStdString(pSourceTag->pSimMesh->sObjName) + ")";
         pTreeItem->setText(0,text);
     }

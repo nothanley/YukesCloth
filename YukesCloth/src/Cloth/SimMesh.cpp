@@ -90,7 +90,7 @@ CSimMeshData::GetRecalcNormals(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	}
 
 	/* align buffer */
-	while (pSimObj->m_pDataStream->tellg() % 8 != 0) {
+	while (pSimObj->m_pDataStream->tellg() % 4 != 0) {
 		ReadByte(*pSimObj->m_pDataStream);
 	}
 
@@ -125,25 +125,46 @@ CSimMeshData::GetRecalcNormals(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 
 void
-CSimMeshData::GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj) {
-    if (!&sMesh || sMesh.bIsSimLine) {
-		printf("Could not parse skin data - Missing sim mesh destination.\n");
-		return;
+CSimMeshData::GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj) 
+{
+	/* This buffer is arranged with respect to the simVtx table, 
+		correct the output to match the table */
+	uint32_t numBones = _U32;
+	uint32_t numVerts = _U32;
+	uint32_t maxBlendWeights = _U32;
+	uint32_t numOther = _U32;
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
+
+	/* Get NodeSkin matrices */
+	for (int i = 0; i < numVerts; i++) {
+		Vector4 skinMatrix{ _FLOAT, _FLOAT, _FLOAT, _FLOAT };
+		sMesh.skin.matrices.push_back(skinMatrix);
 	}
 
-	uintptr_t skinBufferAddress = pSimObj->m_iStreamPos + 0x20;
+	/* Get NodeSkin weights */
+	for (int i = 0; i < numVerts; i++) {
+		Vector4 skinInfluence{ _FLOAT, _FLOAT, _FLOAT, _FLOAT };
+		sMesh.skin.attributes.push_back(skinInfluence);
+	}
+	uintptr_t skinBufferAddress = pSimObj->m_pDataStream->tellg();
 
-	for (int i = 0; i < sMesh.sSimVtxCount; i++) {
-		/* Calculate vtx index from sim mesh vtx table */
-		uint32_t simVtxIndex = sMesh.simVerts.at(i);
-		uint32_t sObjVtxIndex = sMesh.sObjVerts.at(simVtxIndex);
+	/* Get blendweight palette */
+	std::vector<SimNode> skinPalette;
+	for (int i = 0; i < numBones; i++) {
+		int nodeIndex = _U32;
+		SimNode node = pSimObj->m_NodeTable.at(nodeIndex);
+		skinPalette.push_back(node);
+	}
 
-		/* Get weight float data using vtx index */
-		uintptr_t skinWeightAddress = skinBufferAddress + (sObjVtxIndex * 0x10);
-		pSimObj->m_pDataStream->seekg(skinWeightAddress);
-
-		Vector4 skinWeight{ _FLOAT, _FLOAT, _FLOAT, _FLOAT };
-		sMesh.skinData.push_back(skinWeight);
+	/* Get blendweights */
+	for (int i = 0; i < numVerts; i++) {
+		MeshWeight blendWeight;
+		for (int i = 0; i < maxBlendWeights; i++) {
+			blendWeight.numWeights = _U16;
+			blendWeight.bones.push_back( skinPalette.at(_U16).name );
+			blendWeight.weights.push_back(_FLOAT);
+		}
+		sMesh.skin.blendWeights.push_back(blendWeight);
 	}
 }
 
@@ -180,16 +201,15 @@ void
 CSimMeshData::GetSkinCalc(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	uint32_t numSkinVerts = _U32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x10);
-
+	
 	for (int i = 0; i < numSkinVerts; i++)
 	{
 		uint32_t vertIdx = _U32;
-		Vector4 skinWeight = sMesh.skinData.at(vertIdx);
-		sMesh.skinCalc.push_back(skinWeight);
+		Vector4 skinMatrix = sMesh.skin.matrices.at(vertIdx);
+		sMesh.skinCalc.push_back(skinMatrix);
 		/* calls nodeskinmatrix */
 	}
 }
-
 
 void
 CSimMeshData::GetSkinPaste(StSimMesh& sMesh, const CSimObj* pSimObj) {
@@ -199,7 +219,7 @@ CSimMeshData::GetSkinPaste(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	for (int i = 0; i < numPasteVerts; i++)
 	{
 		uint32_t skinIdx = _U32;
-		sMesh.skinPaste.push_back(_U32);
+		sMesh.skinPaste.push_back(skinIdx);
 	}
 }
 
@@ -243,7 +263,8 @@ CSimMeshData::GetConstraintStretchLink(StSimMesh& sMesh, const CSimObj* pSimObj)
 		edgeLink.vertices.y.weight = _FLOAT;;
 		stretchConstraint.data.push_back(edgeLink);
 	}
-	printf("");
+
+	sMesh.constraints.push_back(stretchConstraint);
 }
 
 void
@@ -260,9 +281,12 @@ CSimMeshData::GetConstraintStandardLink(StSimMesh& sMesh, const CSimObj* pSimObj
 		edgeLink.vertices.y.index = _U16;
 
 		edgeLink.vertices.x.weight = _FLOAT;
-		edgeLink.vertices.y.weight = _FLOAT;;
+		edgeLink.vertices.y.weight = _FLOAT;
+		edgeLink.vertices.z.weight = _FLOAT;;
 		constraint.data.push_back(edgeLink);
 	}
+
+	sMesh.constraints.push_back(constraint);
 }
 
 void
@@ -280,8 +304,11 @@ CSimMeshData::GetConstraintBendLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 		edgeLink.vertices.x.weight = _FLOAT;
 		edgeLink.vertices.y.weight = _FLOAT;;
+		edgeLink.vertices.z.weight = _FLOAT;;
 		constraint.data.push_back(edgeLink);
 	}
+
+	sMesh.constraints.push_back(constraint);
 }
 
 void
@@ -306,6 +333,8 @@ CSimMeshData::GetBendStiffness(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 		constraint.faceData.push_back(face);
 	}
+
+	sMesh.constraints.push_back(constraint);
 }
 
 void
@@ -317,7 +346,7 @@ CSimMeshData::GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	sMesh.colVtx.numItems = _S32;
 	sMesh.colVtx.numVerts = _S32;
 	sMesh.colVtx.unkFlagB = _S32;
-	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x50);
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x60);
 
 	for (int i = 0; i < sMesh.colVtx.numItems; i++)
 	{
@@ -350,6 +379,8 @@ CSimMeshData::GetConstraintFixation(StSimMesh& sMesh, const CSimObj* pSimObj) {
 		edge.vertices.x.weight = _FLOAT;
 		constraint.data.push_back(edge);
 	}
+
+	sMesh.constraints.push_back(constraint);
 }
 
 void
@@ -414,7 +445,7 @@ CSimMeshData::GetLineDef(StSimMesh& sMesh, CSimObj* pSimObj) {
 		
 		/* Collect all linked nodes and append to line def*/
 		NodeLink nodeLink = NodeLink{ nodeBegin, nodeEnd };
-		for (int j = nodeBegin; j < nodeEnd; j++) {
+		for (int j = nodeBegin; j <= nodeEnd; j++) {
 			SimNode& node  = sMesh.nodePalette.at(j);
 			nodeLink.link.push_back(node);
 		}
@@ -458,7 +489,39 @@ CSimMeshData::GetNodeTable(CSimObj* pSimObj) {
 
 
 
+void
+CSimMeshData::GetLinkTar(StSimMesh& sLine, CSimObj* pSimObj) 
+{
+	LinkTarget meshTarget;
+	meshTarget.source = ReadString(*pSimObj->m_pDataStream, 0x80);
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x8C);
 
+	uint32_t numIdxs = _U32;
+	uint32_t paletteSize = _U32;
+	meshTarget.totalWeights = _U32;
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0xA0);
+
+	for (uint32_t i = 0; i < numIdxs; i++) {
+		meshTarget.indices.push_back(_U32);
+	}
+
+	for (uint32_t i = 0; i < paletteSize; i++) {
+		meshTarget.palette.push_back(_U32);
+	}
+
+	for (uint32_t i = 0; i < paletteSize; i++) {
+		MeshWeight blendWeight;
+		for (int i = 0; i < meshTarget.totalWeights; i++) {
+			blendWeight.numWeights = _U16;
+			blendWeight.indices.push_back(_U16);
+			blendWeight.weights.push_back(_FLOAT);
+		}
+
+		meshTarget.weights.push_back(blendWeight);
+	}
+
+	sLine.target = meshTarget;
+}
 
 
 

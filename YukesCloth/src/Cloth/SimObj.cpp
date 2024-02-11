@@ -254,6 +254,9 @@ CSimObj::InitTag(StTag& tag) {
 			if (this->m_NodeTable.size() > 0) { break; }
 			CSimMeshData::GetNodeTable(this);
 			break;
+		case enTagType_SimMesh_SimLinkTar:
+			CSimMeshData::GetLinkTar(*tag.pSimMesh,this);
+			break;
 		default:
 //			printf("No Suitable Operator Found for TagType: %d\n", tag.eType);
 			break;

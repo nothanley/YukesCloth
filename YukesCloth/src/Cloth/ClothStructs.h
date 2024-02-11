@@ -16,7 +16,7 @@ struct SkinVertex {
 };
 
 struct Points {
-	SkinVertex x, y;
+	SkinVertex x, y, z;
 };
 
 struct SimNode {
@@ -77,6 +77,28 @@ struct CollisionVerts {
 	std::vector<uint32_t> indices;
 };
 
+struct MeshWeight {
+	int numWeights;
+	std::vector<int> indices;
+	std::vector<std::string> bones;
+	std::vector<float> weights;
+};
+
+struct MeshSkin {
+	std::vector<Vector4> matrices;
+	std::vector<Vector4> attributes;
+	std::vector<MeshWeight> blendWeights;
+};
+
+struct LinkTarget {
+	std::string source;
+	int totalWeights;
+	std::vector<uint32_t> indices;
+	std::vector<uint32_t> palette;
+	std::vector<MeshWeight> weights;
+};
+
+
 struct StSimMesh {
 	uint32_t numTags;
 	uint32_t sNameIdx;
@@ -97,17 +119,18 @@ struct StSimMesh {
 	std::vector<uint32_t> sObjVerts;
 	std::vector<uint32_t> simVerts;
 	std::vector<uint32_t> saveVerts;
-    std::vector<Vector4> skinData;
-    std::vector<Vector4> skinCalc;
 	std::vector<uint32_t> skinPaste;
+    std::vector<Vector4> skinCalc;
 	std::vector<Triangle> sourceEdges;
     std::vector<SimConstraint> constraints;
 	std::vector<SimNode> nodePalette;
 
+	MeshSkin skin;
 	CollisionVerts colVtx;
 	RCNData rcn;
 	ForceField force;
 	LineDef lines;
+	LinkTarget target;
 };
 
 struct StTag {
