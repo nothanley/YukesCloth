@@ -55,7 +55,7 @@ CClothEncoder::GetTagTotalSize(TagBuffer* pTag) {
 void
 CClothEncoder::WriteTagHead(TagBuffer* pTagBuf) {
 	pTagBuf->sSize = GetTagTotalSize(pTagBuf);
-	printf("\nSize of Tag: %d", pTagBuf->sSize);
+	//printf("\nSize of Tag: %d", pTagBuf->sSize);
 
 	/* Write stream metadata */
 	WriteUInt32(m_pDataStream, pTagBuf->tag->eType);
@@ -191,6 +191,24 @@ CClothEncoder::EncodeTag(TagBuffer* pTagBuf) {
 		case enTagType_NodeTbl:
 			EncodeNodeTable(pTagBuf);
 			break;
+		case enTagType_ColIDTbl:
+			EncodeColIdTbl(pTagBuf);
+			break;
+		case enTagType_Cols:
+			EncodeCols(pTagBuf);
+			break;
+		case enTagType_ColPack:
+			EncodeColPack(pTagBuf);
+			break;
+		case enTagType_Capsule_Standard:
+			EncodeCapsuleStandard(pTagBuf);
+			break;
+		case enTagType_Capsule_Tapered:
+			EncodeCapsuleTapered(pTagBuf);
+			break;
+		case enTagType_ColIDInfo:
+			EncodeColIdInfo(pTagBuf);
+			break;
 		default:
 			std::cerr << "Could not resolve encode format for tag type: " << pTag->eType << ". Skipping node..." << endl;
 			pTagBuf->bUsePreDef = true;
@@ -297,8 +315,8 @@ GetNodePalette(MeshSkin& skin, CSimObj* pSimObj, int& numWeights)
 	std::vector<SimNode> nodePalette;
 	for (auto& weight : skin.blendWeights)
 	{
-		if (weight.bones.size() > numWeights) {
-			numWeights = weight.bones.size();
+		if (weight.numWeights > numWeights) {
+			numWeights = weight.numWeights;
 		}
 
 		for (auto& bone : weight.bones)
@@ -346,9 +364,9 @@ WriteSkin(TagBuffer* pTagBuf, MeshSkin skin, std::vector<SimNode>& nodePalette, 
 {
 	for (auto& blendWeight : skin.blendWeights)
 		for (int i = 0; i < weights; i++) {
-			uint32_t totalWeights = blendWeight.weights.size();
+			uint32_t totalWeights = blendWeight.numWeights;
 
-			if (i > totalWeights) {
+			if (i >= totalWeights) {
 				WriteUInt64(pTagBuf->binary, 0x0);
 			}
 			else
@@ -357,7 +375,7 @@ WriteSkin(TagBuffer* pTagBuf, MeshSkin skin, std::vector<SimNode>& nodePalette, 
 				float weight = blendWeight.weights.at(i);
 				uint32_t paletteIdx = FindNodeIndex(boneName, nodePalette);
 
-				WriteUInt16(pTagBuf->binary, totalWeights);
+				WriteUInt16(pTagBuf->binary, blendWeight.numWeights);
 				WriteUInt16(pTagBuf->binary, paletteIdx);
 				WriteFloat(pTagBuf->binary, weight);
 
@@ -407,10 +425,12 @@ void
 CClothEncoder::EncodeSubObj(TagBuffer* pTagBuf) {
 	StTag* tag = pTagBuf->tag;
 	uint32_t numChildren = pTagBuf->children.size();
-	uint32_t nameIdx = FindStringIndex(tag->pSimMesh->sModelName, m_pSimObj->m_sStringTable);
+	uint32_t sModelNameIdx = FindStringIndex(tag->pSimMesh->sModelName, m_pSimObj->m_sStringTable);
+	uint32_t sObjNameIdx = FindStringIndex(tag->pSimMesh->sObjName, m_pSimObj->m_sStringTable);
 
 	WriteUInt32(pTagBuf->binary, numChildren);
-	WriteUInt32(pTagBuf->binary, nameIdx);
+	WriteUInt32(pTagBuf->binary, sModelNameIdx);
+	WriteUInt32(pTagBuf->binary, sObjNameIdx);
 	AlignTagHeader(pTagBuf);
 }
 
@@ -421,14 +441,14 @@ CClothEncoder::EncodeSubObjVerts(TagBuffer* pTagBuf) {
 
 	uint32_t numChildren = pTagBuf->children.size();
 	WriteUInt32(pTagBuf->binary, numChildren);
-	WriteUInt32(pTagBuf->binary, sMesh->sSimVtxCount);
+	WriteUInt32(pTagBuf->binary, sMesh->sObjVerts.size());
 	AlignTagHeader(pTagBuf);
 
 	for (auto& vertIdx : sMesh->sObjVerts) {
 		WriteUInt32(pTagBuf->binary, vertIdx);
 	}
 
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -437,11 +457,11 @@ CClothEncoder::EncodeSimVerts(TagBuffer* pTagBuf) {
 	StSimMesh* sMesh = tag->pSimMesh;
 
 	uint32_t unkVal0 = 0x1;
-	uint32_t unkVal1 = 0x0;
+	uint32_t sObjNameIdx = FindStringIndex(sMesh->sObjName, m_pSimObj->m_sStringTable);
 	uint32_t numSimVerts = tag->pSimMesh->simVerts.size();
 
 	WriteUInt32(pTagBuf->binary, unkVal0);
-	WriteUInt32(pTagBuf->binary, unkVal1);
+	WriteUInt32(pTagBuf->binary, sObjNameIdx);
 	WriteUInt32(pTagBuf->binary, numSimVerts);
 	AlignTagHeader(pTagBuf);
 
@@ -449,7 +469,7 @@ CClothEncoder::EncodeSimVerts(TagBuffer* pTagBuf) {
 		WriteUInt32(pTagBuf->binary, 0x0);
 		WriteUInt32(pTagBuf->binary, vertIdx);
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -496,6 +516,8 @@ CClothEncoder::EncodeRCNData(TagBuffer* pTagBuf) {
 	/* Append vertex and index buffers to tag binary */
 	pTagBuf->binary.write(indexBuffer.str().data(), indexBuffer.str().size());
 	pTagBuf->binary.write(vertexBuffer.str().data(), vertexBuffer.str().size());
+
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -508,7 +530,12 @@ CClothEncoder::EncodeSimMeshSkin(TagBuffer* pTagBuf) {
 	int maxWeights = 0;
 
 	/* Create a bone palette */
-	std::vector<SimNode> nodePalette = GetNodePalette(skin,m_pSimObj,maxWeights);
+	std::vector<SimNode> nodePalette = GetNodePalette(skin, m_pSimObj, maxWeights);
+
+	/* Keeps original palette if already predefined, 
+	used only for debugging crc's but we should not normally do this*/
+	nodePalette = (skin.nodePalette.size() != 0) ? skin.nodePalette : nodePalette; 
+
 	WriteUInt32(pTagBuf->binary, nodePalette.size());
 	WriteUInt32(pTagBuf->binary, numVerts);
 	WriteUInt32(pTagBuf->binary, maxWeights);
@@ -519,8 +546,9 @@ CClothEncoder::EncodeSimMeshSkin(TagBuffer* pTagBuf) {
 	WriteNodeSkinMatrices(pTagBuf, skin);
 	WriteSkinPalette(pTagBuf, m_pSimObj, nodePalette);
 	WriteSkin(pTagBuf, skin, nodePalette, maxWeights);
-	WriteUInt32(pTagBuf->binary, 0x0);
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	//WriteUInt32(pTagBuf->binary, 0x0);
+
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -538,6 +566,8 @@ CClothEncoder::EncodeSimLinkSource(TagBuffer* pTagBuf) {
 		WriteUInt16(pTagBuf->binary, triangle.point1);
 		WriteUInt32(pTagBuf->binary, triangle.point2);
 	}
+
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 
@@ -566,6 +596,21 @@ CClothEncoder::EncodeStacks(TagBuffer* pTagBuf) {
 	WriteUInt32(pTagBuf->binary, numChildren);
 }
 
+int
+FindMatrixIndex(StSimMesh* pSimMesh, const Vector4& target) {
+
+	int numMatrices = pSimMesh->skin.matrices.size();
+	for (int i = 0; i < numMatrices; i++) {
+		Vector4 skinVtx = pSimMesh->skin.matrices.at(i);
+		bool isMatching = false;
+
+		if (skinVtx == target) 
+			return i;
+	}
+
+	return -1;
+}
+
 void
 CClothEncoder::EncodeSkinCalc(TagBuffer* pTagBuf) {
 	StTag* tag = pTagBuf->tag;
@@ -573,13 +618,12 @@ CClothEncoder::EncodeSkinCalc(TagBuffer* pTagBuf) {
 
 	WriteUInt32(pTagBuf->binary, numVerts);
 
-	int matrixIdx = 0;
 	for (auto& skinVtx : tag->pSimMesh->skinCalc) {
-		/* Implement Vec4 search for matrix index */
-		WriteUInt32(pTagBuf->binary, matrixIdx);
-		matrixIdx++;
+		uint32_t matrixIndex = FindMatrixIndex(tag->pSimMesh, skinVtx);
+		WriteUInt32(pTagBuf->binary, matrixIndex);
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -591,7 +635,7 @@ CClothEncoder::EncodeSkinPaste(TagBuffer* pTagBuf) {
 	for (auto& Idx : tag->pSimMesh->skinPaste) {
 		WriteUInt32(pTagBuf->binary, Idx);
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -603,7 +647,7 @@ CClothEncoder::EncodeVertexSave(TagBuffer* pTagBuf) {
 	for (auto& Idx : tag->pSimMesh->saveVerts) {
 		WriteUInt32(pTagBuf->binary, Idx);
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -624,7 +668,7 @@ CClothEncoder::EncodeForceField(TagBuffer* pTagBuf) {
 		WriteUInt32(pTagBuf->binary, data.index);
 		WriteFloat(pTagBuf->binary, data.weight);
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -647,7 +691,7 @@ CClothEncoder::EncodeConstraint_Stretch(TagBuffer* pTagBuf) {
 		WriteFloat(pTagBuf->binary, link.vertices.x.weight);
 		WriteFloat(pTagBuf->binary, link.vertices.y.weight);
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -662,7 +706,7 @@ CClothEncoder::EncodeConstraint_Std(TagBuffer* pTagBuf) {
 	uint32_t numLinks = constraint.data.size();
 
 	WriteUInt32(pTagBuf->binary, numLinks);
-	WriteUInt32(pTagBuf->binary, 0x1);
+	WriteUInt32(pTagBuf->binary, constraint.parameter);
 	AlignTagHeader(pTagBuf);
 
 	for (auto& link : constraint.data) {
@@ -672,7 +716,7 @@ CClothEncoder::EncodeConstraint_Std(TagBuffer* pTagBuf) {
 		WriteFloat(pTagBuf->binary, link.vertices.y.weight);
 		WriteFloat(pTagBuf->binary, link.vertices.z.weight);
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -687,7 +731,7 @@ CClothEncoder::EncodeConstraint_Bend(TagBuffer* pTagBuf) {
 	uint32_t numLinks = constraint.data.size();
 
 	WriteUInt32(pTagBuf->binary, numLinks);
-	WriteUInt32(pTagBuf->binary, 0x0);
+	WriteUInt32(pTagBuf->binary, constraint.parameter);
 	AlignTagHeader(pTagBuf);
 
 	for (auto& link : constraint.data) {
@@ -697,7 +741,7 @@ CClothEncoder::EncodeConstraint_Bend(TagBuffer* pTagBuf) {
 		WriteFloat(pTagBuf->binary, link.vertices.y.weight);
 		WriteFloat(pTagBuf->binary, link.vertices.z.weight);
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -718,7 +762,7 @@ CClothEncoder::EncodeConstraint_Fixation(TagBuffer* pTagBuf) {
 		WriteUInt32(pTagBuf->binary, link.vertices.x.index);
 		WriteFloat(pTagBuf->binary, link.vertices.x.weight);
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -733,7 +777,7 @@ CClothEncoder::EncodeBendStiffness(TagBuffer* pTagBuf) {
 	uint32_t numLinks = constraint.faceData.size();
 
 	WriteUInt32(pTagBuf->binary, numLinks);
-	WriteUInt32(pTagBuf->binary, 0x1);
+	WriteUInt32(pTagBuf->binary, constraint.parameter);
 	WriteFloat(pTagBuf->binary, 1.0f);
 	AlignTagHeader(pTagBuf);
 
@@ -747,7 +791,7 @@ CClothEncoder::EncodeBendStiffness(TagBuffer* pTagBuf) {
 		WriteFloat(pTagBuf->binary, link.weights.at(2));
 		WriteFloat(pTagBuf->binary, link.weights.at(3));
 	}
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void 
@@ -767,7 +811,8 @@ WriteColVertHeader(TagBuffer* pTagBuf, StSimMesh* pSimMesh) {
 	WriteInt32(pTagBuf->binary, pSimMesh->colVtx.numVerts);
 	WriteInt32(pTagBuf->binary, pSimMesh->colVtx.unkFlagB);
 
-	for (int i = 0; i < 4; i++)
+	uint32_t numPads = (pSimMesh->colVtx.tagSize != 0x50) ? 4 : 2;
+	for (int i = 0; i < numPads; i++)
 		WriteUInt64(pTagBuf->binary, 0x0);
 
 	AlignTagHeader(pTagBuf);
@@ -791,7 +836,7 @@ CClothEncoder::EncodeColVerts(TagBuffer* pTagBuf) {
 		WriteUInt32(pTagBuf->binary, point);
 	}
 
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -806,6 +851,22 @@ CClothEncoder::EncodeSimLine(TagBuffer* pTagBuf) {
 	WriteUInt32(pTagBuf->binary, pSimMesh->sIterationCount);
 	AlignTagHeader(pTagBuf);
 
+}
+
+
+int
+FindNodeMatrixIndex(const SimNode& sTarget, std::vector<SimNode> nodeTable)
+{
+	for (int i = 0; i < nodeTable.size(); i++) {
+		SimNode nodeItem = nodeTable.at(i);
+
+		if (sTarget.name == nodeItem.name &&
+			sTarget.vecf == nodeItem.vecf) {
+			return i;
+		}
+	}
+
+	return -1;
 }
 
 
@@ -824,14 +885,14 @@ CClothEncoder::EncodeLineDef(TagBuffer* pTagBuf) {
 		SimNode endNode = link.link.back();
 
 		uint32_t beginIndex = FindNodeIndex(beginNode.name, pSimMesh->nodePalette);
-		uint32_t endIndex = FindNodeIndex(endNode.name, pSimMesh->nodePalette);
+		uint32_t endIndex   = FindNodeMatrixIndex(endNode, pSimMesh->nodePalette);
 
 		WriteUInt32(pTagBuf->binary, i);
 		WriteUInt32(pTagBuf->binary, beginIndex);
 		WriteUInt32(pTagBuf->binary, endIndex);
 	}
 
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -854,7 +915,7 @@ CClothEncoder::EncodeAssignNode(TagBuffer* pTagBuf) {
 		WriteUInt32(pTagBuf->binary, nodeIdx);
 	}
 
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -902,7 +963,7 @@ CClothEncoder::EncodeLinkTar(TagBuffer* pTagBuf) {
 			}
 		}
 
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
 void
@@ -937,6 +998,95 @@ CClothEncoder::EncodeString(TagBuffer* pTagBuf) {
 
 	std::string str = tag->sTagName;
 	pTagBuf->binary.write(str.c_str(), str.size() + 1);
-	AlignStream(pTagBuf->binary, 16, 0xC);
+	AlignStream(pTagBuf->binary, BINARY_ALIGNMENT, 0xC);
 }
 
+void 
+CClothEncoder::EncodeColIdTbl(TagBuffer* pTag) {
+	StTag* tag = pTag->tag;
+
+	WriteUInt32(pTag->binary, tag->children.size() );
+	WriteUInt32(pTag->binary, tag->children.size());
+	AlignTagHeader(pTag);
+}
+
+void 
+CClothEncoder::EncodeCols(TagBuffer* pTag) {
+	StTag* tag = pTag->tag;
+	uint32_t numChilds = tag->children.size();
+	WriteUInt32(pTag->binary, numChilds);
+	WriteUInt32(pTag->binary, -1);
+
+	for (int i = 0; i < 4; i++)
+		WriteUInt64(pTag->binary, 0x0);
+	AlignTagHeader(pTag);
+}
+
+void 
+CClothEncoder::EncodeColPack(TagBuffer* pTag) {
+	StTag* tag = pTag->tag;
+	uint32_t numChilds = tag->children.size();
+
+	WriteUInt32(pTag->binary, numChilds);
+	WriteUInt32(pTag->binary, 0);
+	WriteUInt32(pTag->binary, tag->children.front()->eType);
+	AlignTagHeader(pTag);
+}
+void 
+CClothEncoder::EncodeCapsuleStandard(TagBuffer* pTag) {
+	StTag* tag = pTag->tag;
+	CollisionVolume col = tag->col;
+
+	WriteUInt32(pTag->binary, FindStringIndex(col.name, m_pSimObj->m_sStringTable));
+	WriteUInt32(pTag->binary, FindNodeIndex(col.joint, m_pSimObj->m_NodeTable));
+
+	for (auto& weight : col.weights) {
+		WriteFloat(pTag->binary, weight);
+	}
+
+	WriteUInt32(pTag->binary, col.id);
+
+	for (int i = 0; i < 4; i++)
+		WriteUInt64(pTag->binary, 0x0);
+
+	AlignTagHeader(pTag);
+}
+
+void 
+CClothEncoder::EncodeCapsuleTapered(TagBuffer* pTag) {
+	StTag* tag = pTag->tag;
+	CollisionVolume col = tag->col;
+
+	WriteUInt32(pTag->binary, FindStringIndex(col.name, m_pSimObj->m_sStringTable));
+	WriteUInt32(pTag->binary, FindNodeIndex(col.joint, m_pSimObj->m_NodeTable));
+
+	for (auto& weight : col.weights) {
+		WriteFloat(pTag->binary, weight);
+	}
+	
+	WriteFloat(pTag->binary, col.radius);
+	WriteUInt32(pTag->binary, col.id);
+
+	for (int i = 0; i < 6; i++)
+		WriteUInt64(pTag->binary, 0x0);
+
+	AlignTagHeader(pTag);
+}
+
+
+void
+CClothEncoder::EncodeColIdInfo(TagBuffer* pTag) {
+	StTag* tag = pTag->tag;
+	uint32_t numChilds = tag->children.size();
+
+	WriteUInt32(pTag->binary, numChilds);
+	WriteUInt32(pTag->binary, 0x0);
+	WriteUInt32(pTag->binary, 0x1);
+	WriteUInt32(pTag->binary, 0x1);
+	AlignTagHeader(pTag);
+
+	WriteUInt64(pTag->binary, 0x0);
+	//WriteUInt64(pTag->binary, 0x0);
+
+	AlignStream(pTag->binary, BINARY_ALIGNMENT, 0xC);
+}

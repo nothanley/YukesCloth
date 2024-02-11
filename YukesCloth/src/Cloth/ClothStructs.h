@@ -19,6 +19,16 @@ struct Points {
 	SkinVertex x, y, z;
 };
 
+struct CollisionVolume {
+	int id;
+	std::string name;
+	std::string joint;
+	uint32_t indexA, indexB, indexC;
+	uint32_t unkVal0, unkVal1, unkVal2;
+	std::vector<float> weights;
+	float radius;
+};
+
 struct SimNode {
     uint32_t index;
     std::string name;
@@ -59,6 +69,7 @@ struct SimConstraint {
 	uint32_t type;
 	std::vector<EdgeConstraint> data;
 	std::vector<FaceConstraint> faceData;
+	uint32_t parameter;
 };
 
 struct ForceField {
@@ -72,6 +83,7 @@ struct CollisionVerts {
 	uint32_t numItems;
 	uint32_t numVerts;
 	int32_t unkFlagB;
+	uint32_t tagSize;
 
 	std::vector<Points> items;
 	std::vector<uint32_t> indices;
@@ -88,6 +100,7 @@ struct MeshSkin {
 	std::vector<Vector4> matrices;
 	std::vector<Vector4> attributes;
 	std::vector<MeshWeight> blendWeights;
+	std::vector<SimNode> nodePalette;
 };
 
 struct LinkTarget {
@@ -145,11 +158,19 @@ struct StTag {
 	uintptr_t streamPointer;
     std::string sTagName;
 
+	CollisionVolume col;
+
 #ifdef DEBUG_DISP_BINARY
     std::vector<uint8_t> data;
 #endif
 };
 
+static bool operator==(const Vector4& vec_a, const Vector4& vec_b) {
+	bool isMatching = (vec_a.x == vec_b.x && vec_a.y == vec_b.y &&
+		vec_a.z == vec_b.z && vec_a.w == vec_b.w);
+
+	return isMatching;
+}
 
 namespace yclutils {
 	void debugPrintFloats(std::vector<Vector4>* floatArray);
