@@ -1,11 +1,13 @@
 // YukesCloth.cpp : This file contains the 'main' function. Program execution begins and ends there. //
-
-#include "ClothContainer.h"
+#include "YukesCloth"
 #include <iostream>
+
 int main()
 {
 
-    ClothContainer _yclContainer(
-        "C:\\Users\\wauke\\Desktop\\W24_DevResearch\\YCL\\SmallSamples\\_ HAIR - 00170 - MAIN\\hair_00170.ycl");
+    CClothContainer _yclContainer(
+        "C:\\Users\\wauke\\Desktop\\W24_DevResearch\\YCL\\SmallSamples\\Other\\hair_10083.ycl");
 
+
+    CClothSave::SaveToDisk("C:\\Users\\wauke\\Desktop\\out_file.ycl", _yclContainer.m_pClothSimObj);
 }

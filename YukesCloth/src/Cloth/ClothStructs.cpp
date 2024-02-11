@@ -1,4 +1,4 @@
-#include "CClothStructs.h"
+#include "ClothStructs.h"
 #include <string>
 #include <fstream>
 #include <BinaryIO.h>

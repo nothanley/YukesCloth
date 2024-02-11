@@ -9,20 +9,20 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    $$PWD/../YukesCloth/CClothStructs.cpp \
-    $$PWD/../YukesCloth/CSimMeshData.cpp \
-    $$PWD/../YukesCloth/CSimObj.cpp \
-    $$PWD/../YukesCloth/ClothContainer.cpp \
+    $$PWD/../YukesCloth/src/Cloth/ClothStructs.cpp \
+    $$PWD/../YukesCloth/src/Cloth/SimMesh.cpp \
+    $$PWD/../YukesCloth/src/Cloth/SimObj.cpp \
+    $$PWD/../YukesCloth/src/Container/ClothContainer.cpp \
     $$PWD/../YukesCloth/include/BinaryIO.cpp \
     defwidgetitem.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
-    $$PWD/../YukesCloth/CClothStructs.h \
-    $$PWD/../YukesCloth/CSimMeshData.h \
-    $$PWD/../YukesCloth/CSimObj.h \
-    $$PWD/../YukesCloth/ClothContainer.h \
+    $$PWD/../YukesCloth/src/Cloth/ClothStructs.h \
+    $$PWD/../YukesCloth/src/Cloth/SimMesh.h \
+    $$PWD/../YukesCloth/src/Cloth/SimObj.h \
+    $$PWD/../YukesCloth/src/Container/ClothContainer.h \
     $$PWD/../YukesCloth/include/BinaryIO.h \
     $$PWD/../YukesCloth/YukesCloth \
     defwidgetitem.h \
@@ -32,6 +32,7 @@ FORMS += \
     mainwindow.ui
 
 INCLUDEPATH += $$PWD/../YukesCloth
+INCLUDEPATH += $$PWD/../YukesCloth/src
 INCLUDEPATH += $$PWD/../YukesCloth/include
 
 # Default rules for deployment.

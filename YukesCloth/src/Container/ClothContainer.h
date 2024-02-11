@@ -1,19 +1,19 @@
 /* Validates YANM file and initializes a stream upon validation success  */
-#pragma once
 #include <BinaryIO.h>
 #include <fstream>
+#pragma once
 
 using namespace std;
 using namespace BinaryIO;
 
 class CSimObj;
-class ClothContainer {
+class CClothContainer {
 	enum {
 		YCLHEAD = 0x0
 	};
 
 public:
-	ClothContainer(const char* FilePath) {
+	CClothContainer(const char* FilePath) {
 		this->m_sFilePath = FilePath;
 		Load();
 		fs->close();

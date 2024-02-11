@@ -9,45 +9,66 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="Cloth">
+      <UniqueIdentifier>{23a34dc8-4495-4d08-bee1-da439a88823d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Container">
+      <UniqueIdentifier>{7062bb07-9b15-4e7d-9cad-c06b6a08ae48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Encoder">
+      <UniqueIdentifier>{6e87240c-928d-41e0-b0ee-3519ff0f73e2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ClothContainer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="include\BinaryIO.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="CSimObj.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\Cloth\SimMesh.cpp">
+      <Filter>Cloth</Filter>
     </ClCompile>
-    <ClCompile Include="CClothStructs.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\Cloth\SimObj.cpp">
+      <Filter>Cloth</Filter>
     </ClCompile>
-    <ClCompile Include="CSimMeshData.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\Cloth\ClothStructs.cpp">
+      <Filter>Cloth</Filter>
     </ClCompile>
-    <ClCompile Include="Node Documentation">
-      <Filter>Header Files</Filter>
+    <ClCompile Include="src\Container\ClothContainer.cpp">
+      <Filter>Container</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Encoder\ClothSave.cpp">
+      <Filter>Encoder</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Encoder\ClothEncoder.cpp">
+      <Filter>Encoder</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClothContainer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\BinaryIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CSimObj.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\Cloth\SimMesh.h">
+      <Filter>Cloth</Filter>
     </ClInclude>
-    <ClInclude Include="CClothStructs.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\Cloth\SimObj.h">
+      <Filter>Cloth</Filter>
     </ClInclude>
-    <ClInclude Include="CSimMeshData.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="src\Cloth\ClothStructs.h">
+      <Filter>Cloth</Filter>
     </ClInclude>
+    <ClInclude Include="src\Container\ClothContainer.h">
+      <Filter>Container</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Encoder\ClothEncoder.h">
+      <Filter>Encoder</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Encoder\ClothSave.h">
+      <Filter>Encoder</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="YukesCloth" />
   </ItemGroup>
 </Project>

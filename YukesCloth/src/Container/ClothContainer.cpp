@@ -1,5 +1,5 @@
 #include "ClothContainer.h"
-#include "CSimObj.h"
+#include "../Cloth/SimObj.h"
 #include "winsock.h"
 
 using namespace std;
@@ -12,23 +12,27 @@ static uint64_t GetFileBufferSize(std::filebuf* buffer) {
 	return uint64_t(size);
 }
 
-void ClothContainer::Load() {
+void 
+CClothContainer::Load() {
 	if (this->fs == nullptr)
 		this->fs = new std::ifstream(this->m_sFilePath, ios::binary);
 	if (!fs->good())
 		throw("Cannot read YCL stream.");
 	ValidateContainer();
 	if (this->isOk) { ReadContents(); }
+	fs->close();
 }
 
-void ClothContainer::ReadContents() {
+void
+CClothContainer::ReadContents() {
 	printf("Opening File: %s\n", m_sFilePath.c_str());
 
 	m_pClothSimObj = new CSimObj(fs);
 	m_pClothSimObj->Create();
 }
 
-void ClothContainer::ValidateContainer() {
+void 
+CClothContainer::ValidateContainer() {
 	fs->seekg(ios::beg);
 	uint32_t signature = ReadUInt32(*fs);
 	this->m_iFileSize = GetFileBufferSize(fs->rdbuf());

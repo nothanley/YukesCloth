@@ -1,9 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 #include <QFileDialog>
-#include <YukesCloth>
 #include "defwidgetitem.h"
+#include <YukesCloth>
 #pragma once
 
 MainWindow::MainWindow(QWidget *parent)
@@ -32,7 +31,7 @@ MainWindow::on_OpenFile_clicked()
 void
 MainWindow::OpenYukesClothFile(const QString& filePath){
 
-    m_pYclFile = new ClothContainer(filePath.toStdString().c_str());
+    m_pYclFile = new CClothContainer(filePath.toStdString().c_str());
     StTag* pRootNode = m_pYclFile->m_pClothSimObj->m_pStHead;
     PopulateTreeWidget(pRootNode);
 }
@@ -69,7 +68,7 @@ SetNodeText(const StTag* pSourceTag, DefWidgetItem* pTreeItem){
 
     if (pSourceTag->eType == /* SIMMESH */ 0x5 || pSourceTag->eType == 0x1B){
         QString text = pTreeItem->text(0);
-        text += " (" + QString::fromStdString(pSourceTag->pSimMesh->modelName)
+        text += " (" + QString::fromStdString(pSourceTag->pSimMesh->sObjName)
                 + " : "+ QString::fromStdString(pSourceTag->pSimMesh->sObjName) + ")";
         pTreeItem->setText(0,text);
     }
