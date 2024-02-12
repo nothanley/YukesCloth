@@ -273,7 +273,6 @@ CSimObj::InitTag(StTag& tag) {
 			CSimMeshData::GetCapsuleStandard(this, tag);
 			break;
 		default:
-//			printf("No Suitable Operator Found for TagType: %d\n", tag.eType);
 			break;
 
 	}

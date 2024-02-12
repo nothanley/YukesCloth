@@ -1,8 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QFileDialog>
+#include <QDebug>
 #include "defwidgetitem.h"
+#include "nodeselectwindow.h"
 #include <YukesCloth>
+#include <Cloth/SimMesh.h>
 #pragma once
 
 MainWindow::MainWindow(QWidget *parent)
@@ -10,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setWindowTitle("YCL Viewer v0.9.10");
 }
 
 MainWindow::~MainWindow()
@@ -23,9 +27,40 @@ MainWindow::on_OpenFile_clicked()
 {
     this->m_sYclFilePath = QFileDialog::getOpenFileName(this, tr("Open .ycl file"),
                                                          this->m_sExplorerPath,
-                                                         tr("Animation Definitions (*.ycl)") );
+                                                         tr("Yukes ClothSim Container (*.ycl)") );
     if (m_sYclFilePath == "") return;
     OpenYukesClothFile(m_sYclFilePath);
+}
+
+void
+GetNodeCount(const uint32_t& target, StTag* pNode, uint32_t& totalNodes ){
+    if (pNode->eType == target)
+        totalNodes++;
+
+    for (auto& child : pNode->children){
+        GetNodeCount(target, child, totalNodes);
+    }
+}
+
+void
+MainWindow::UpdateStatLabels(){
+
+    uint32_t numMeshes = 0;
+    uint32_t numLines = 0;
+    uint32_t numCols = 0;
+
+    StTag* pRootNode = m_pYclFile->m_pClothSimObj->m_pStHead;
+    GetNodeCount(enTagType_SimMesh, pRootNode, numMeshes);
+    GetNodeCount(enTagType_SimLine, pRootNode, numLines);
+    GetNodeCount(enTagType_Capsule_Standard, pRootNode, numCols);
+    GetNodeCount(enTagType_Capsule_Tapered, pRootNode, numCols);
+
+
+    ui->nodeLabel->setText(QString::number(pRootNode->children.size()) + " node(s)");
+    ui->pathLabel->setText(m_sYclFilePath.split("/").last());
+    ui->meshTotalLabel->setText("SimMesh Total: " + QString::number(numMeshes));
+    ui->lineTotalLabel->setText("SimLine Total: " + QString::number(numLines));
+    ui->colTotalLabel->setText("Collision Total: " + QString::number(numCols));
 }
 
 void
@@ -34,6 +69,7 @@ MainWindow::OpenYukesClothFile(const QString& filePath){
     m_pYclFile = new CClothContainer(filePath.toStdString().c_str());
     StTag* pRootNode = m_pYclFile->m_pClothSimObj->m_pStHead;
     PopulateTreeWidget(pRootNode);
+    UpdateStatLabels();
 }
 
 
@@ -68,7 +104,7 @@ SetNodeText(const StTag* pSourceTag, DefWidgetItem* pTreeItem){
 
     if (pSourceTag->eType == /* SIMMESH */ 0x5 || pSourceTag->eType == 0x1B){
         QString text = pTreeItem->text(0);
-        text += " (" + QString::fromStdString(pSourceTag->pSimMesh->sObjName)
+        text += " (" + QString::fromStdString(pSourceTag->pSimMesh->sModelName)
                 + " : "+ QString::fromStdString(pSourceTag->pSimMesh->sObjName) + ")";
         pTreeItem->setText(0,text);
     }
@@ -105,37 +141,93 @@ QString intToHexQString(int value) {
     return hexString;
 }
 
+void
+AppendTableItem(QTableWidget* pTableWidget, const QString& text, int colIdx = 0){
+    int numRows = pTableWidget->rowCount();
+    pTableWidget->setRowCount(numRows+1);
+    pTableWidget->setItem(numRows,colIdx,new QTableWidgetItem(text));
+}
+
+void
+AppendTableItem(QTableWidget* pTableWidget, const uint32_t& value, int colIdx = 0){
+    int numRows = pTableWidget->rowCount();
+    pTableWidget->setRowCount(numRows+1);
+    pTableWidget->setItem(numRows,colIdx,new QTableWidgetItem(QString::number(value)));
+}
+
+void
+ClearTable(QTableWidget* pTable){
+    pTable->clear();
+    pTable->setColumnCount(0);
+    pTable->setRowCount(0);
+}
+
+void removeElementAtIndex(std::vector<StTag*>& vec, size_t index) {
+    if (index < vec.size()) { // Ensure the index is valid
+        vec.erase(vec.begin() + index); // Remove the element at the specified index
+    }
+}
+
+int
+GetParentChildNodeIndex(StTag* pSourceTag){
+    if (!pSourceTag->pParent) return -1;
+    std::vector<StTag*> pTags = pSourceTag->pParent->children;
+    for (int i = 0; i < pTags.size(); i++)
+    {
+        StTag* node = pTags.at(i);
+
+        if (node->eType         == pSourceTag->eType &&
+            node->sSize         == pSourceTag->sSize &&
+            node->sTagName      == pSourceTag->sTagName &&
+            node->streamPointer == pSourceTag->streamPointer)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+void
+MainWindow::PopulateTableWidget(StTag* pNode){
+    ClearTable(ui->tableWidget);
+    QStringList headers = {"Tag Type", "Tag Size","Tag Address","Children"};
+    ui->tableWidget->setColumnCount(1);
+
+    AppendTableItem(ui->tableWidget, pNode->eType);
+    AppendTableItem(ui->tableWidget, pNode->sSize);
+    AppendTableItem(ui->tableWidget, pNode->streamPointer);
+    AppendTableItem(ui->tableWidget, pNode->children.size());
+
+    ui->tableWidget->verticalHeader()->setVisible(true);
+    ui->tableWidget->horizontalHeader()->setVisible(false);
+    ui->tableWidget->setVerticalHeaderLabels(headers);
+
+    /* Display mesh data */
+    if (pNode->pSimMesh){
+        StSimMesh* pSimMesh = pNode->pSimMesh;
+        QStringList meshHeaders = {"Mesh Name","Mesh Vertex Count","Sim Vertex Count","Constraints", "Is Sim Line", "Nodes"};
+
+        AppendTableItem(ui->tableWidget, QString::fromStdString(pSimMesh->sObjName));
+        AppendTableItem(ui->tableWidget, pSimMesh->sObjVerts.size());
+        AppendTableItem(ui->tableWidget, pSimMesh->sSimVtxCount);
+        AppendTableItem(ui->tableWidget, pSimMesh->constraints.size());
+        AppendTableItem(ui->tableWidget, pSimMesh->bIsSimLine);
+        AppendTableItem(ui->tableWidget, pSimMesh->nodePalette.size());
+
+        ui->tableWidget->setVerticalHeaderLabels(headers+meshHeaders);
+    }
+}
 
 void MainWindow::on_treeWidget_itemDoubleClicked(QTreeWidgetItem *item, int column)
 {
     DefWidgetItem* pTreeItem = (DefWidgetItem*)item;
     StTag* pSourceTag = pTreeItem->getItemTag();
 
-    ui->textEdit->clear();
     ui->ItemAddress->clear();
     ui->ItemName->clear();
-
-#ifdef DEBUG_DISP_BINARY
-    QString sDataHexString;
-
-    for (int i = 0; i < pSourceTag->data.size(); i++){
-        auto byte = pSourceTag->data.at(i);
-
-        if (i % 16 == 0)
-            sDataHexString += "\n";
-
-        sDataHexString += " " + intToHexQString(byte);
-    }
-
-    ui->textEdit->setText(sDataHexString);
-#endif
-
     ui->ItemName->setText( yclutils::GetNodeName(pSourceTag->eType).c_str() );
     ui->ItemAddress->setText( "0x"+QString::number(pSourceTag->streamPointer-0xC,16).toUpper() );
+    PopulateTableWidget(pSourceTag);
 }
-
-
-
 
 void MainWindow::on_actionExpand_Collapse_triggered()
 {
@@ -148,6 +240,153 @@ void MainWindow::on_actionExpand_Collapse_triggered()
 
     isExpanded = !isExpanded;
 }
+
+
+void MainWindow::on_actionExit_triggered()
+{
+    QApplication::exit(0);
+}
+
+
+void MainWindow::on_SaveButton_clicked()
+{
+    if (!this->m_pYclFile){
+        QMessageBox::warning(this,"File Error", "Please load .ycl to save contents.");
+        return; }
+
+    if (m_pYclFile->m_pClothSimObj->m_pStHead->children.size() == 0){
+        QMessageBox::warning(this,"File Error", "YCL is missing a tag hierarchy.");
+        return;}
+
+    QString savePath = QFileDialog::getSaveFileName(this, tr("Save .ycl file as"),
+                                                         this->m_sYclFilePath,
+                                                         tr("Yukes ClothSim Container (*.ycl)") );
+    if (savePath == "") return;
+    if (!savePath.endsWith(".ycl"))
+        savePath += ".ycl";
+
+    CClothSave::SaveToDisk(savePath.toStdString().c_str(), m_pYclFile->m_pClothSimObj);
+    QMessageBox::warning(this,"Save Complete", "File saved to: " + savePath);
+}
+
+
+void MainWindow::on_actionSave_File_triggered()
+{
+    on_SaveButton_clicked();
+}
+
+void
+MainWindow::ClearSelectionWindow()
+{
+    this->m_pSelectionWindow = nullptr;
+    qDebug() << "Window Closed!";
+}
+
+void AddStringToVector(std::vector<std::string>& vec,
+                          const std::string& target) {
+    for (const auto& str : vec)
+        if (str == target) return;
+
+    vec.push_back(target);
+}
+
+int
+FindNodeIndex(const SimNode& sTarget, std::vector<SimNode> nodeTable)
+{
+    for (int i = 0; i < nodeTable.size(); i++) {
+        SimNode nodeItem = nodeTable.at(i);
+
+        if (sTarget.name == nodeItem.name &&
+            sTarget.vecf == nodeItem.vecf) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+
+
+void
+MainWindow::AddNodeToTreeTag(StTag* newTag){
+    qDebug() << "\nAdding node: " << newTag->sTagName.c_str() << " to root";
+    CSimObj* pSimObj = m_pYclFile->m_pClothSimObj;
+    if (!newTag->pSimMesh) return;
+
+    /* Append to node palette if doesn't exists */
+    for (auto& node : newTag->pSimMesh->nodePalette)
+    {
+        int nodeIdx = FindNodeIndex(node,pSimObj->m_NodeTable);
+        if (nodeIdx == -1)
+            pSimObj->m_NodeTable.push_back(node);
+    }
+
+    /* Append mesh names to string table */
+    AddStringToVector(pSimObj->m_sStringTable,newTag->pSimMesh->sModelName);
+    AddStringToVector(pSimObj->m_sStringTable,newTag->pSimMesh->sObjName);
+
+    /* Add node to parent children */
+    std::vector<StTag*>& children = pSimObj->m_pStHead->children;
+    children.insert(children.begin(), newTag);
+
+    /* Reload Hierarchy */
+    PopulateTreeWidget(m_pYclFile->m_pClothSimObj->m_pStHead);
+    UpdateStatLabels();
+}
+
+void MainWindow::on_addnodebutton_clicked()
+{
+    if (this->m_pSelectionWindow || !m_pYclFile) return;
+    StTag* pUserTag = m_pYclFile->m_pClothSimObj->m_pStHead;
+    if (!pUserTag) return;
+
+    /* Get source file path */
+    QString sourceFile = QFileDialog::getOpenFileName(this, tr("Open .ycl file"),
+                                                         this->m_sExplorerPath,
+                                                         tr("Yukes ClothSim Container (*.ycl)") );
+    if (sourceFile == "") return;
+
+    CClothContainer sourceYCL(sourceFile.toStdString().c_str());
+    this->m_pSelectionWindow = new NodeSelectWindow(sourceYCL.m_pClothSimObj,pUserTag,this);
+    m_pSelectionWindow->show();
+
+    /* Connect close signals in this & child dialog */
+    QObject::connect(m_pSelectionWindow, &NodeSelectWindow::interfaceClose,
+                        this, &MainWindow::ClearSelectionWindow);
+
+    /*  Connect signals in this & child dialog */
+    QObject::connect(m_pSelectionWindow, &NodeSelectWindow::addNodeToItem,
+                        this, &MainWindow::AddNodeToTreeTag);
+}
+
+
+void MainWindow::on_removenodebutton_clicked()
+{
+    QTreeWidgetItem* pTreeItem = ui->treeWidget->currentItem();
+    DefWidgetItem* pDefItem = (DefWidgetItem*)pTreeItem;
+
+    /* Evaluate parent index */
+    if (!pDefItem) return;
+    StTag* pSourceTag = pDefItem->getItemTag();
+    int nodeIdx = GetParentChildNodeIndex(pSourceTag);
+
+    /* Remove Element */
+    if (nodeIdx == -1) return;
+    removeElementAtIndex(pSourceTag->pParent->children,nodeIdx);
+    delete pSourceTag; /* todo: delete all children */
+
+    /* Reload Hierarchy */
+    PopulateTreeWidget(m_pYclFile->m_pClothSimObj->m_pStHead);
+    UpdateStatLabels();
+}
+
+
+
+
+
+
+
+
 
 
 
