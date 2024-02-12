@@ -67,6 +67,33 @@ CClothEncoder::WriteTagHead(TagBuffer* pTagBuf) {
 }
 
 void
+RegenerateStringTable(StTag* tag, CSimObj* pSimObj) {
+	if (tag->eType == enTagType_StrTbl) {
+		tag->children.clear();
+		for (auto& str : pSimObj->m_sStringTable) {
+			StTag* child = new StTag;
+			child->eType = enTagType_String;
+			child->pParent = tag;
+			child->sTagName = str;
+			tag->children.push_back(child);
+		}
+	}
+}
+
+void
+RegenerateNodeTable(StTag* tag, CSimObj* pSimObj) {
+	if (tag->eType == enTagType_NodeTbl) {
+		tag->children.clear();
+		for (auto& node : pSimObj->m_NodeTable) {
+			StTag* child = new StTag;
+			child->eType = enTagType_String;
+			child->pParent = tag;
+			child->sTagName = node.name;
+			tag->children.push_back(child);
+		}
+	}
+}
+void
 CClothEncoder::WriteTree(TagBuffer* pTagBuf) {
 	WriteTagHead(pTagBuf);
 
@@ -79,6 +106,12 @@ void
 CClothEncoder::InitTagBuffers(TagBuffer* pParentBuf)
 {
 	for (auto& tag : pParentBuf->tag->children) {
+
+		/* Generate new string and node tables */
+		RegenerateStringTable(tag,m_pSimObj);
+		RegenerateNodeTable(tag, m_pSimObj);
+
+		/* Create TagBuffer */
 		TagBuffer* pChildBuf = new TagBuffer;
 		pChildBuf->tag = tag;
 
@@ -534,7 +567,7 @@ CClothEncoder::EncodeSimMeshSkin(TagBuffer* pTagBuf) {
 
 	/* Keeps original palette if already predefined, 
 	used only for debugging crc's but we should not normally do this*/
-	nodePalette = (skin.nodePalette.size() != 0) ? skin.nodePalette : nodePalette; 
+	//nodePalette = (skin.nodePalette.size() != 0) ? skin.nodePalette : nodePalette; 
 
 	WriteUInt32(pTagBuf->binary, nodePalette.size());
 	WriteUInt32(pTagBuf->binary, numVerts);
@@ -988,6 +1021,17 @@ CClothEncoder::EncodeNodeTable(TagBuffer* pTagBuf) {
 	WriteUInt32(pTagBuf->binary, numChildren);
 	WriteUInt32(pTagBuf->binary, numNodes);
 	AlignTagHeader(pTagBuf);
+
+	/* Create child node objects */
+	tag->children.clear();
+	for (auto& node : m_pSimObj->m_NodeTable) {
+		StTag* child = new StTag;
+		child->eType = enTagType_String;
+		child->pParent = tag;
+		child->sTagName = node.name;
+		tag->children.push_back(child);
+	}
+
 }
 
 

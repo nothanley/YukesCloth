@@ -73,3 +73,9 @@ void NodeSelectWindow::on_buttonBox_accepted()
 
 
 
+
+void NodeSelectWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
+{
+    on_buttonBox_accepted();
+}
+

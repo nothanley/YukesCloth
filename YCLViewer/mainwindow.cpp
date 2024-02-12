@@ -305,8 +305,6 @@ FindNodeIndex(const SimNode& sTarget, std::vector<SimNode> nodeTable)
     return -1;
 }
 
-
-
 void
 MainWindow::AddNodeToTreeTag(StTag* newTag){
     qDebug() << "\nAdding node: " << newTag->sTagName.c_str() << " to root";
@@ -314,7 +312,9 @@ MainWindow::AddNodeToTreeTag(StTag* newTag){
     if (!newTag->pSimMesh) return;
 
     /* Append to node palette if doesn't exists */
-    for (auto& node : newTag->pSimMesh->nodePalette)
+    StSimMesh* pSimMesh = newTag->pSimMesh;
+
+    for (auto& node : pSimMesh->skin.nodePalette)
     {
         int nodeIdx = FindNodeIndex(node,pSimObj->m_NodeTable);
         if (nodeIdx == -1)

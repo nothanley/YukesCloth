@@ -1,5 +1,6 @@
 #include <QDialog>
 #include <YukesCloth>
+#include <QListWidgetItem>
 #pragma once
 
 //class CSimObj;
@@ -24,6 +25,8 @@ Q_SIGNALS:
 private slots:
     void on_buttonBox_rejected();
     void on_buttonBox_accepted();
+
+    void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
 
 private:
     void SetupListWidget();
