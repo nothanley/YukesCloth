@@ -5,6 +5,8 @@ class StTag;
 class CSimObj;
 class TagBuffer;
 
+#define BINARY_ALIGNMENT 16
+
 class CClothEncoder
 {
 
@@ -47,6 +49,13 @@ private:
 	void EncodeStringTable(TagBuffer* pTag);
 	void EncodeString(TagBuffer* pTag);
 	void EncodeNodeTable(TagBuffer* pTag);
+	void EncodeColIdTbl(TagBuffer* pTag);
+	void EncodeCols(TagBuffer* pTag);
+	void EncodeColPack(TagBuffer* pTag);
+	void EncodeCapsuleStandard(TagBuffer* pTag);
+	void EncodeCapsuleTapered(TagBuffer* pTag);
+	void EncodeColIdInfo(TagBuffer* pTag);
+
 
 private:
 	uint32_t GetTagTotalSize(TagBuffer* pTag);

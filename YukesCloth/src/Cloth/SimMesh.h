@@ -87,7 +87,7 @@ class CSimMeshData
         static void GetConstraintStandardLink(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetConstraintBendLink(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetBendStiffness(StSimMesh& sMesh, const CSimObj* pSimObj);
-        static void GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj);
+        static void GetCollisionVerts(StTag& pTag, StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetConstraintFixation(StSimMesh& sMesh, const CSimObj* pSimObj);
         static void GetSimLine(StTag &pTag, const CSimObj* pSimObj);
         static void AssignNode(StSimMesh& sLine, CSimObj* pSimObj);
@@ -95,6 +95,11 @@ class CSimMeshData
         static void GetStringTable(CSimObj* pSimObj);
         static void GetNodeTable(CSimObj* pSimObj);
         static void GetLinkTar(StSimMesh& sLine, CSimObj* pSimObj);
+        static void GetColIDTbl(CSimObj* pSimObj);
+        static void GetCols(CSimObj* pSimObj);
+        static void GetColPack(CSimObj* pSimObj);
+        static void GetCapsuleTapered(CSimObj* pSimObj, StTag& tag);
+        static void GetCapsuleStandard(CSimObj* pSimObj, StTag& tag);
         static std::string GetString(CSimObj* pSimObj);
 };
 

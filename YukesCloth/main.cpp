@@ -6,8 +6,10 @@ int main()
 {
 
     CClothContainer _yclContainer(
-        "C:\\Users\\wauke\\Desktop\\W24_DevResearch\\YCL\\SmallSamples\\Other\\hair_10083.ycl");
+        "C:\\Users\\wauke\\Desktop\\hair_10083.ycl");
 
 
-    CClothSave::SaveToDisk("C:\\Users\\wauke\\Desktop\\out_file.ycl", _yclContainer.m_pClothSimObj);
+    CClothSave::SaveToDisk(
+        "C:\\Users\\wauke\\Desktop\\out_file.ycl", 
+        _yclContainer.m_pClothSimObj);
 }

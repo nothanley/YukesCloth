@@ -231,7 +231,7 @@ CSimObj::InitTag(StTag& tag) {
 			CSimMeshData::GetBendStiffness(*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_ColVtx:
-			CSimMeshData::GetCollisionVerts(*tag.pSimMesh,this);
+			CSimMeshData::GetCollisionVerts(tag,*tag.pSimMesh,this);
 			break;
 		case enTagType_SimMesh_CtFixation:
 			CSimMeshData::GetConstraintFixation(*tag.pSimMesh,this);
@@ -257,8 +257,22 @@ CSimObj::InitTag(StTag& tag) {
 		case enTagType_SimMesh_SimLinkTar:
 			CSimMeshData::GetLinkTar(*tag.pSimMesh,this);
 			break;
+		case enTagType_ColIDTbl:
+			CSimMeshData::GetColIDTbl(this);
+			break;
+		case enTagType_Cols:
+			CSimMeshData::GetCols(this);
+			break;
+		case enTagType_ColPack:
+			CSimMeshData::GetColPack(this);
+			break;
+		case enTagType_Capsule_Tapered:
+			CSimMeshData::GetCapsuleTapered(this, tag);
+			break;
+		case enTagType_Capsule_Standard:
+			CSimMeshData::GetCapsuleStandard(this, tag);
+			break;
 		default:
-//			printf("No Suitable Operator Found for TagType: %d\n", tag.eType);
 			break;
 
 	}

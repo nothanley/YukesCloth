@@ -13,23 +13,30 @@ SOURCES += \
     $$PWD/../YukesCloth/src/Cloth/SimMesh.cpp \
     $$PWD/../YukesCloth/src/Cloth/SimObj.cpp \
     $$PWD/../YukesCloth/src/Container/ClothContainer.cpp \
+    $$PWD/../YukesCloth/src/Encoder/ClothEncoder.cpp \
+    $$PWD/../YukesCloth/src/Encoder/ClothSave.cpp \
     $$PWD/../YukesCloth/include/BinaryIO.cpp \
     defwidgetitem.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    nodeselectwindow.cpp
 
 HEADERS += \
     $$PWD/../YukesCloth/src/Cloth/ClothStructs.h \
     $$PWD/../YukesCloth/src/Cloth/SimMesh.h \
     $$PWD/../YukesCloth/src/Cloth/SimObj.h \
     $$PWD/../YukesCloth/src/Container/ClothContainer.h \
+    $$PWD/../YukesCloth/src/Encoder/ClothEncoder.h \
+    $$PWD/../YukesCloth/src/Encoder/ClothSave.h \
     $$PWD/../YukesCloth/include/BinaryIO.h \
     $$PWD/../YukesCloth/YukesCloth \
     defwidgetitem.h \
-    mainwindow.h
+    mainwindow.h \
+    nodeselectwindow.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    nodeselectwindow.ui
 
 INCLUDEPATH += $$PWD/../YukesCloth
 INCLUDEPATH += $$PWD/../YukesCloth/src
@@ -42,3 +49,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DEFINES += DEBUG_DISP_BINARY
 DEFINES += DEBUG_CONSOLE
+
+RESOURCES += \
+    icons.qrc

@@ -7,6 +7,7 @@ class StHead;
 class StTag;
 class StSimMesh;
 class SimNode;
+class CollisionVolume;
 
 class CSimObj
 {
@@ -14,6 +15,8 @@ class CSimObj
 public:
 	std::vector<std::string> m_sStringTable;
 	std::vector<SimNode> m_NodeTable;
+	std::vector<CollisionVolume> m_ColTable;
+	std::string collisionID;
 	StTag* m_pStHead = nullptr;
 
 public:
@@ -31,7 +34,7 @@ private:
 	void UpdateStrings();
 
 private:
-    std::vector<int> rootNodes{ 1,2,5,6,9,19,23,25,27,31 };
+    std::vector<int> rootNodes{ 1,2,5,6,9,19,23,25,27,31,32 };
 
 private:
 	std::ifstream* m_pDataStream = nullptr;

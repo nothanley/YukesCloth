@@ -159,13 +159,23 @@ CSimMeshData::GetSkinData(StSimMesh& sMesh, const CSimObj* pSimObj)
 	/* Get blendweights */
 	for (int i = 0; i < numVerts; i++) {
 		MeshWeight blendWeight;
+		blendWeight.numWeights = maxBlendWeights;
+
 		for (int i = 0; i < maxBlendWeights; i++) {
-			blendWeight.numWeights = _U16;
-			blendWeight.bones.push_back( skinPalette.at(_U16).name );
-			blendWeight.weights.push_back(_FLOAT);
+			if (i >= blendWeight.numWeights) 
+			{
+				_U16; _U16; _FLOAT;
+			}
+			else {
+				blendWeight.numWeights = _U16;
+				blendWeight.bones.push_back(skinPalette.at(_U16).name);
+				blendWeight.weights.push_back(_FLOAT);
+			}
 		}
 		sMesh.skin.blendWeights.push_back(blendWeight);
 	}
+
+	sMesh.skin.nodePalette = skinPalette;
 }
 
 void
@@ -183,7 +193,7 @@ CSimMeshData::Link_DefineSourceMesh(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetSimMeshPattern(StSimMesh& sMesh, const CSimObj* pSimObj) {
-    if (!&sMesh || sMesh.bIsSimLine) {
+    if (!&sMesh) {
 		printf("Could not parse skin pattern - Missing sim mesh destination.\n");
 		return;
 	}
@@ -269,10 +279,11 @@ CSimMeshData::GetConstraintStretchLink(StSimMesh& sMesh, const CSimObj* pSimObj)
 
 void
 CSimMeshData::GetConstraintStandardLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	uint32_t numLinks = _U32;
-	uint32_t unkVal = _U32;
-	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
+
 	SimConstraint constraint{ "Standard", enTagType_SimMesh_CtStdLink };
+	uint32_t numLinks = _U32;
+	constraint.parameter = _U32;
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
 
 	for (int i = 0; i < numLinks; i++)
 	{
@@ -291,10 +302,10 @@ CSimMeshData::GetConstraintStandardLink(StSimMesh& sMesh, const CSimObj* pSimObj
 
 void
 CSimMeshData::GetConstraintBendLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
-	uint32_t numLinks = _U32;
-	uint32_t unkVal = _U32;
-	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
 	SimConstraint constraint{ "Bend", enTagType_SimMesh_CtBendLink };
+	uint32_t numLinks = _U32;
+	constraint.parameter = _U32;
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
 
 	for (int i = 0; i < numLinks; i++)
 	{
@@ -313,11 +324,11 @@ CSimMeshData::GetConstraintBendLink(StSimMesh& sMesh, const CSimObj* pSimObj) {
 
 void
 CSimMeshData::GetBendStiffness(StSimMesh& sMesh, const CSimObj* pSimObj) {
+	SimConstraint constraint{ "BendStiffness", enTagType_SimMesh_BendingStiffness };
 	uint32_t numTris = _U32;
-	uint32_t unkVal = _U32;
+	constraint.parameter = _U32;
 	float unkFloat = _FLOAT;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x20);
-	SimConstraint constraint{ "BendStiffness", enTagType_SimMesh_BendingStiffness };
 
 	for (int i = 0; i < numTris; i++){
 		FaceConstraint face;
@@ -338,7 +349,8 @@ CSimMeshData::GetBendStiffness(StSimMesh& sMesh, const CSimObj* pSimObj) {
 }
 
 void
-CSimMeshData::GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj) {
+CSimMeshData::GetCollisionVerts(StTag& tag, StSimMesh& sMesh, const CSimObj* pSimObj) {
+	sMesh.colVtx.tagSize = tag.sSize;
 	sMesh.colVtx.unkFlag = _S32;
 	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x30);
 
@@ -346,7 +358,7 @@ CSimMeshData::GetCollisionVerts(StSimMesh& sMesh, const CSimObj* pSimObj) {
 	sMesh.colVtx.numItems = _S32;
 	sMesh.colVtx.numVerts = _S32;
 	sMesh.colVtx.unkFlagB = _S32;
-	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + 0x60);
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos + tag.sSize);
 
 	for (int i = 0; i < sMesh.colVtx.numItems; i++)
 	{
@@ -523,14 +535,68 @@ CSimMeshData::GetLinkTar(StSimMesh& sLine, CSimObj* pSimObj)
 	sLine.target = meshTarget;
 }
 
+void
+CSimMeshData::GetColIDTbl(CSimObj* pSimObj)
+{
+	uint32_t numChildren = _U32;
+	uint32_t numColliders = _U32;
+	pSimObj->m_iStreamPos = uintptr_t(pSimObj->m_pDataStream->tellg()) + 0xC;
+	pSimObj->m_pDataStream->seekg(pSimObj->m_iStreamPos);
+	
+	for (int i = 0; i < numColliders; i++) {
+		std::string name = GetString(pSimObj);
+		pSimObj->collisionID = name;
+	}
+}
+
+void
+CSimMeshData::GetCols(CSimObj* pSimObj) {
+	uint32_t numChildren = _U32;
+	int32_t unkVal = _S32;
+}
 
 
+void
+CSimMeshData::GetColPack(CSimObj* pSimObj) {
+	uint32_t numCapsules = _U32;
+	uint32_t pad = _U32;
+	uint32_t packType = _U32;
+}
 
+void
+CSimMeshData::GetCapsuleStandard(CSimObj* pSimObj, StTag& tag)
+{
+	CollisionVolume capsule;
+	capsule.indexA = _U32;
+	capsule.indexB = _U32;
 
+	capsule.weights = std::vector<float>
+	{  _FLOAT, _FLOAT, _FLOAT, _FLOAT,
+	   _FLOAT, _FLOAT, _FLOAT, _FLOAT };
 
+	capsule.id = _U32;
+	capsule.name = pSimObj->m_sStringTable.at(capsule.indexA);
+	capsule.joint = pSimObj->m_NodeTable.at(capsule.indexB).name;
 
+	pSimObj->m_ColTable.push_back(capsule);
+	tag.col = capsule;
+}
 
+void
+CSimMeshData::GetCapsuleTapered(CSimObj* pSimObj, StTag& tag) {
+	CollisionVolume capsule;
+	capsule.indexA = _U32;
+	capsule.indexB = _U32;
 
+	capsule.weights = std::vector<float>
+	{ _FLOAT, _FLOAT, _FLOAT, _FLOAT,
+	   _FLOAT, _FLOAT, _FLOAT, _FLOAT };
 
+	capsule.radius = _FLOAT;
+	capsule.id = _U32;
+	capsule.name = pSimObj->m_sStringTable.at(capsule.indexA);
+	capsule.joint = pSimObj->m_NodeTable.at(capsule.indexB).name;
 
-
+	pSimObj->m_ColTable.push_back(capsule);
+	tag.col = capsule;
+}

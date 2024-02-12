@@ -22,6 +22,7 @@ CClothSave::Save() {
 	/* Converts and serializes simulation object into .ycl format.
 	   Writes all data to specified out stream */
 	CClothEncoder(m_pDataStream, m_pSimObj);
+    m_pDataStream->close();
 }
 
 bool
